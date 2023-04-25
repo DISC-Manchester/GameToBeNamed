@@ -5,7 +5,7 @@ namespace GameToBeNamed.src
 {
     internal sealed class GameSqlAccess : IDisposable
     {
-        readonly SqlConnection connection = new SqlConnection("Data Source=10.230.233.180;Initial Catalog=Game_Accounts;User ID=gamequeryer;Password=Password123$");
+        readonly SqlConnection connection = new("Data Source=10.230.233.180;Initial Catalog=Game_Accounts;User ID=gamequeryer;Password=Password123$");
         readonly string login_query = "SELECT UserUUID FROM users WHERE UserName=@username AND UserPassword=@password";
 
         public GameSqlAccess()
@@ -26,15 +26,12 @@ namespace GameToBeNamed.src
             }
         }
 
-        public bool login(string username, string password)
+        public bool Login(string username, string password)
         {
-            using (SqlCommand command = new SqlCommand(login_query, connection))
-            {
-                // Set the parameters for the query
-                command.Parameters.AddWithValue("@username", username);
-                command.Parameters.AddWithValue("@password", password);
-                return command.ExecuteScalar() != null;
-            }
+            using SqlCommand command = new(login_query, connection);
+            command.Parameters.AddWithValue("@username", username);
+            command.Parameters.AddWithValue("@password", password);
+            return command.ExecuteScalar() != null;
         }
 
         public void Dispose() => connection.Close();

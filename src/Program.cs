@@ -1,6 +1,15 @@
 ﻿// See https://aka.ms/new-console-template for more information
-using GameToBeNamed.src;
-
+using GameToBeNamed.src.renderer;
+using OpenTK.Mathematics;
+using OpenTK.Windowing.Common;
+using System.Reflection;
+Window game_window = new(new()
+{
+    Size = new Vector2i(1280, 720),
+    Title = Assembly.GetCallingAssembly().GetName().Name,
+    Flags = ContextFlags.ForwardCompatible,
+});
+game_window.Run();
 /*GameSqlAccess access = new GameSqlAccess();
 Console.WriteLine("Enter your username: ");
 string username = Console.ReadLine();
@@ -14,5 +23,3 @@ else
 {
     Console.WriteLine("login failed");
 }*/
-
-
