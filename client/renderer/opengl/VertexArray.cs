@@ -1,5 +1,5 @@
 ﻿using OpenTK.Graphics.ES30;
-namespace GameToBeNamed.src.renderer.opengl
+namespace GameToBeNamed.client.renderer.opengl
 {
     internal static class VertexArray
     {
@@ -19,7 +19,7 @@ namespace GameToBeNamed.src.renderer.opengl
         //draw
         public static void DrawVertex(int count) =>
             GL.DrawArrays(PrimitiveType.Triangles, 0, count);
-        public static void DrawVertexInstance(int count,int instance_count) =>
+        public static void DrawVertexInstance(int count, int instance_count) =>
             GL.DrawArraysInstanced(PrimitiveType.Triangles, 0, count, instance_count);
         public static void DrawElements(int count) =>
             GL.DrawElements(PrimitiveType.Triangles, count, DrawElementsType.UnsignedInt, 0);
