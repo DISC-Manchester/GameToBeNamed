@@ -3,14 +3,14 @@ using MongoDB.Bson;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace GameToBeNamed.server
+namespace SquareSmash.server
 {
     internal sealed class GameDataBaseAccess : IDisposable
     {
         readonly MongoClient client;
         public GameDataBaseAccess()
         {
-            MongoClientSettings settings = MongoClientSettings.FromConnectionString("mongodb+srv://GameAccess:bfHY0pSTcDAHnrYp@discgameserver.svtoxdh.mongodb.net/?retryWrites=false&w=majority");
+            MongoClientSettings settings = MongoClientSettings.FromConnectionString("");
             settings.ServerApi = new(ServerApiVersion.V1);
             client = new(settings);
         }

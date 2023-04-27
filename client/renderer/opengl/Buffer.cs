@@ -1,5 +1,5 @@
 ﻿using OpenTK.Graphics.ES30;
-namespace GameToBeNamed.client.renderer.opengl
+namespace SquareSmash.client.renderer.opengl
 {
     internal static class Buffer
     {

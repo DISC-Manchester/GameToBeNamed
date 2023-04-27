@@ -1,4 +1,4 @@
-﻿namespace GameToBeNamed.share
+﻿namespace SquareSmash.share
 {
     internal class ErrorOrData
 

@@ -1,7 +1,7 @@
-﻿using GameToBeNamed.client.network;
-using GameToBeNamed.share;
+﻿using SquareSmash.client.network;
+using SquareSmash.share;
 
-namespace GameToBeNamed.server
+namespace SquareSmash.server
 {
     internal class Server
     {
