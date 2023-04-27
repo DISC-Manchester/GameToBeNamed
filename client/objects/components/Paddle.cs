@@ -1,15 +1,14 @@
 ﻿using SquareSmash.client.renderer;
 using OpenTK.Mathematics;
-using VertexArray = SquareSmash.client.renderer.opengl.VertexArray;
+using OpenTK.Windowing.GraphicsLibraryFramework;
+
 namespace SquareSmash.client.objects.components
 {
     internal class Paddle : GameObjects
     {
-        public readonly int id;
-        public readonly QuadBuffer quat;
-        public Vector2 Position { get; set; }
-        public int Width { get; set; }
-        public int Height { get; set; }
+        private Vector2 Position;
+        private readonly int Width;
+        private readonly int Height;
 
         public Paddle()
         {
@@ -21,13 +20,9 @@ namespace SquareSmash.client.objects.components
                 X = Client.Width / 2 - Width / 2,
                 Y = Client.Height - 20
             };
-            id = VertexArray.Gen();
-            VertexArray.Bind(id);
-            quat = new();
-            VertexArray.Bind(0);
         }
 
-        public void resetPaddle()
+        public void ResetPaddle()
         {
             Position = new Vector2
             {
@@ -36,16 +31,24 @@ namespace SquareSmash.client.objects.components
             };
         }
 
+
+        public override void OnUpdate(object sender, UpdateEventArgs e)
+        {
+            var client = (Client)sender;
+            float MoveDistance = Math.Abs(0.001f * (float)e.DeltaTime) * Client.Width;
+            if (client.KeyboardState.IsKeyDown(Keys.A) && Position.X > 20)
+                Position.X -= MoveDistance;
+            else if(client.KeyboardState.IsKeyDown(Keys.D) && Position.X < Client.Width - 60)
+                Position.X += MoveDistance;
+        }
+
         public override void OnRendering(object sender, EventArgs e)
         {
-            VertexArray.Bind(id);
-            VertexArray.DrawVertex(6);
+            ((QuadBatchRenderer)sender).AddQuad(Position,new(Width,Height), Color4.Purple);
         }
 
         public override void Dispose()
         {
-            quat.Dispose();
-            VertexArray.Delete(id);
         }
     }
 }
