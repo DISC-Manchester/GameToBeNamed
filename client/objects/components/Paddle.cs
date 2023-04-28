@@ -1,10 +1,12 @@
 ﻿using SquareSmash.client.renderer;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.GraphicsLibraryFramework;
+using SquareSmash.client.Utils;
 
 namespace SquareSmash.client.objects.components
 {
-    internal class Paddle : GameObjects
+    internal class Paddle 
+    : ColidableGameObject
     {
         private Vector2 Position;
         private readonly int Width;
@@ -31,7 +33,6 @@ namespace SquareSmash.client.objects.components
             };
         }
 
-
         public override void OnUpdate(object sender, UpdateEventArgs e)
         {
             var client = (Client)sender;
@@ -49,6 +50,11 @@ namespace SquareSmash.client.objects.components
 
         public override void Dispose()
         {
+        }
+
+        public override bool DoseIntersects(Vector2 position, Vector2 size)
+        {
+            return CollisionUtil.DoseIntersects(Position, new(Width / 2, Height / 2), position, size);
         }
     }
 }

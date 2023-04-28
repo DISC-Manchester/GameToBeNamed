@@ -1,7 +1,7 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
 
-namespace SquareSmash.client.network
+namespace SquareSmash.client.Utils
 {
     internal static class NetUtil
     {

@@ -1,4 +1,6 @@
-﻿namespace SquareSmash.client.objects
+﻿using OpenTK.Mathematics;
+
+namespace SquareSmash.client.objects
 {
     internal class UpdateEventArgs : EventArgs
     {
@@ -8,10 +10,15 @@
             this.DeltaTime = DeltaTime;
         }
     }
-    internal abstract class GameObjects : IDisposable
+    internal abstract class GameObject : IDisposable
     {
         public abstract void Dispose();
         public abstract void OnUpdate(object sender, UpdateEventArgs e);
         public abstract void OnRendering(object sender,EventArgs e);
+    }
+
+    internal abstract class ColidableGameObject: GameObject
+    {
+        public abstract bool DoseIntersects(Vector2 position, Vector2 size);
     }
 }

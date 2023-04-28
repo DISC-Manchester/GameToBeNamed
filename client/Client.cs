@@ -7,6 +7,7 @@ using System.Reflection;
 using SquareSmash.client.renderer;
 using System.Runtime.InteropServices;
 using SquareSmash.client.objects;
+using SquareSmash.client.objects.levels;
 
 namespace SquareSmash.client
 {
@@ -18,6 +19,8 @@ namespace SquareSmash.client
 
         public QuadBatchRenderer Renderer { get; private set; }
         public Paddle paddle;
+        public List<Wall> walls  = new();
+        public Level level;
 
         public delegate void OnRenderingEventHandler(object sender, EventArgs e);
         public event OnRenderingEventHandler OnRendering;
@@ -52,8 +55,16 @@ namespace SquareSmash.client
         {
             base.OnLoad();
             paddle = new();
+            level = new();
             OnRendering += paddle.OnRendering;
             OnUpdating += paddle.OnUpdate;
+            OnRendering += level.OnRendering;
+            OnUpdating += level.OnUpdate;
+            walls.Add(new(new(0, Height), 20, Height * 2));
+            walls.Add(new(new(Width - 10, Height), 20, Height * 2));
+            walls.Add(new(new(0, 10), Width * 2, 20));
+            foreach (Wall wall in walls)
+                OnRendering += wall.OnRendering;
             PreviousTime = this.RenderTime;
             GL.ClearColor(0, 0, 0, 1);
         }
@@ -88,9 +99,6 @@ namespace SquareSmash.client
         {
             base.OnRenderFrame(args);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-            Renderer.AddQuad(new(0, Height), new(20, Height * 2), Color4.LightGray);
-            Renderer.AddQuad(new(0, 10), new(Width * 2, 20), Color4.LightGray);
-            Renderer.AddQuad(new(Width - 10, Height), new(20, Height * 2), Color4.LightGray);
             if (OnRendering is not null)
                 OnRendering(Renderer, EventArgs.Empty);
             Renderer.Flush();

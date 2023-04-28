@@ -1,4 +1,4 @@
-﻿using SquareSmash.client.network;
+﻿using SquareSmash.client.Utils;
 using SquareSmash.share;
 
 namespace SquareSmash.server
