@@ -1,55 +1,42 @@
 ﻿using OpenTK.Mathematics;
 using OpenTK.Graphics.ES30;
-using SquareSmash.client.renderer.opengl;
-using Buffer = SquareSmash.client.renderer.opengl.Buffer;
-using static SquareSmash.client.renderer.opengl.Shader;
+using SquareSmash.renderer.opengl;
+using SquareSmash.Utils;
 
-namespace SquareSmash.client.renderer
+namespace SquareSmash.renderer
 {
-    internal class QuadBatchRenderer
+    internal sealed class QuadBatchRenderer : IDisposable
     {
         struct QuadVertex
         {
+#pragma warning disable S4487 // Unread "private" fields should be removed
             public Vector2 Position;
             public Color4 Color;
+#pragma warning restore S4487 // Unread "private" fields should be removed
         }
-        public int Width { get; private set; }
-        public int Height { get; private set; }
         private readonly int vbo;
         private readonly int vao;
         private readonly ShaderHandle sid;
         private readonly List<QuadVertex> quadVertices;
-        public QuadBatchRenderer(int Width,int Height)
+        public QuadBatchRenderer()
         {
-            this.Width = Width;
-            this.Height = Height;
             quadVertices = new List<QuadVertex>();
-            sid = Create("#version 330 core\r\nlayout(location = 0) in vec2 position;\r\nlayout(location = 1) in vec4 color;\r\n\r\nout vec4 vertexColor;\r\n\r\nvoid main()\r\n{\r\n    gl_Position = vec4(position, 0.0, 1.0);\r\n    vertexColor = color;\r\n}", 
+            sid = Shader.Create("#version 330 core\r\nlayout(location = 0) in vec2 position;\r\nlayout(location = 1) in vec4 color;\r\n\r\nout vec4 vertexColor;\r\n\r\nvoid main()\r\n{\r\n    gl_Position = vec4(position, 0.0, 1.0);\r\n    vertexColor = color;\r\n}",
                                   "#version 330 core\r\nin vec4 vertexColor;\r\nout vec4 fragColor;\r\n\r\nvoid main()\r\n{\r\n    fragColor = vertexColor;\r\n}");
-            vbo = Buffer.Gen();
-            vao = VertexArray.Gen();
-            VertexArray.Bind(vao);
-            Buffer.VertexBind(vbo);
-            VertexArray.EnableAttrib(0);
+            vbo = GL.GenBuffer();
+            vao = GL.GenVertexArray();
+            GL.BindVertexArray(vao);
+            GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
+            GL.EnableVertexAttribArray(0);
             GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, 6 * sizeof(float), 0);
-            VertexArray.EnableAttrib(1);
-            VertexArray.AttribPointer(1, 4, VertexAttribPointerType.Float, 6 * sizeof(float), 2 * sizeof(float));
-            VertexArray.Bind(0);
-        }
-
-        public void OnResize(int Width, int Height)
-        {
-            this.Width = Width;
-            this.Height = Height;
+            GL.EnableVertexAttribArray(1);
+            GL.VertexAttribPointer(1, 4, VertexAttribPointerType.Float, false, 6 * sizeof(float), 2 * sizeof(float));
+            GL.BindVertexArray(0);
         }
 
         public void AddQuad(Vector2 position, Vector2 size, Color4 color)
         {
-            position.X = (position.X - Width / 2f) / (Width / 2f);
-            position.Y = (Height / 2f - position.Y) / (Height / 2f);
-
-            size.X /= Width;
-            size.Y /= Height;
+            CollisionUtil.ToWorldSpace(ref position, ref size);
             var quad = new QuadVertex[6]; // Use 6 vertices for a quad triangle strip
 
             quad[0].Position = position;
@@ -77,12 +64,20 @@ namespace SquareSmash.client.renderer
         {
             if (quadVertices.Count == 0)
                 return;
-            VertexArray.Bind(vao);
-            GL.BufferData(BufferTarget.ArrayBuffer, quadVertices.Count * (6 * sizeof(float)), quadVertices.ToArray(), BufferUsageHint.DynamicDraw);
-            Bind(sid);
-            VertexArray.DrawVertex(quadVertices.Count);
-            VertexArray.Bind(0);
+            GL.BindVertexArray(vao);
+            GL.BufferData(BufferTarget.ArrayBuffer, quadVertices.Count * 6 * sizeof(float), quadVertices.ToArray(), BufferUsageHint.DynamicDraw);
+            Shader.Bind(sid);
+            GL.DrawArrays(PrimitiveType.Triangles, 0, quadVertices.Count);
+            GL.BindVertexArray(0);
             quadVertices.Clear();
+        }
+
+        public void Dispose()
+        {
+            quadVertices.Clear();
+            GL.DeleteBuffer(vbo);
+            GL.DeleteVertexArray(vao);
+            Shader.Delete(sid);
         }
     }
 }

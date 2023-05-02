@@ -1,5 +1,5 @@
-﻿using SquareSmash.client.Utils;
-using SquareSmash.share;
+﻿using SquareSmash.share;
+using SquareSmash.Utils;
 
 namespace SquareSmash.server
 {

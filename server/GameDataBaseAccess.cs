@@ -1,8 +1,5 @@
 ﻿using MongoDB.Driver;
 using MongoDB.Bson;
-using System.Security.Cryptography;
-using System.Text;
-
 namespace SquareSmash.server
 {
     internal sealed class GameDataBaseAccess : IDisposable
