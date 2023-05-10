@@ -32,7 +32,6 @@ namespace SquareSmash.objects.components
 
         public int GetScore()
         {
-            
             Score = 0;
             return LastScore;
         }
@@ -62,7 +61,7 @@ namespace SquareSmash.objects.components
                 if (senders.Item2.Paddle.GetVelocity().X != 0)
                     Velocity.X = -Velocity.X;
                 else
-                    Velocity.X += Math.Clamp(senders.Item2.Paddle.GetVelocity().X,-0.001f,0.001f);
+                    Velocity.X += Math.Clamp(senders.Item2.Paddle.GetVelocity().X, -0.001f, 0.001f);
                 Position.Y -= 1;
                 Position.X += Velocity.X < 0 ? -1 : 1;
             }
@@ -113,7 +112,7 @@ namespace SquareSmash.objects.components
         }
         public override void OnRendering(object sender)
         {
-            ImGui.SetNextWindowPos(new(80,20), ImGuiCond.Always, new(0.5f, 0.5f));
+            ImGui.SetNextWindowPos(new(80, 20), ImGuiCond.Always, new(0.5f, 0.5f));
             bool temp = false;
             ImGui.Begin("ScoreBoard", ref temp, ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoBackground | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoSavedSettings | ImGuiWindowFlags.NoFocusOnAppearing | ImGuiWindowFlags.NoBringToFrontOnFocus);
             ImGui.SetWindowFontScale(1.5f);

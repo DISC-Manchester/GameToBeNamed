@@ -139,7 +139,7 @@ namespace SquareSmash
         public void LevelWon()
         {
             CurrentLevel++;
-            level = new Level(this,"assets/levels/level_" + Convert.ToString(CurrentLevel) + ".json");
+            level = new Level(this, "assets/levels/level_" + Convert.ToString(CurrentLevel) + ".json");
         }
 
         private int LastScore = 0;

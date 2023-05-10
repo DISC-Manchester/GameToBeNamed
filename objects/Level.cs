@@ -1,9 +1,9 @@
-﻿using OpenTK.Mathematics;
+﻿using OpenTK.Compute.OpenCL;
+using OpenTK.Mathematics;
 using SquareSmash.objects.components;
 using SquareSmash.objects.components.bricks;
 using SquareSmash.objects.components.bricks.types;
 using SquareSmash.renderer;
-using System.Drawing;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -68,40 +68,31 @@ namespace SquareSmash.objects
             };
         }
 
+        private void AddBrick(BrickData brick, ref float x, ref float y)
+        {
+            bricks.Add(MakeBrick(brick.Type, new(x, y), brick.Colour));
+            bricks_left++;
+            x += Client.Instance.Width / 11.0f - 16;
+            if (x > Client.Instance.Width - 20)
+            {
+                x = 16;
+                y += Brick.Height - 8;
+            }
+        }
+
         public Level(Client client, string json_level)
         {
             LevelData data = JsonSerializer.Deserialize<LevelData>(File.ReadAllText(json_level));
-            ball = new(client.Paddle,data.BaseBallSpeed);
+            ball = new(client.Paddle, data.BaseBallSpeed);
             uint BRICK_PADDING = 16;
             float x = BRICK_PADDING;
             float y = 120;
             foreach (BrickData brick in data.Bricks)
             {
                 if (brick.Loop == 0)
-                {
-                    bricks.Add(MakeBrick(brick.Type, new(x, y), brick.Colour));
-                    bricks_left++;
-                    x += client.Width / 11.0f - BRICK_PADDING;
-                    if (x > client.Width - 20)
-                    {
-                        x = BRICK_PADDING;
-                        y += Brick.Height - 8;
-                    }
-                }
-                else
-                {
-                    for(int i = 0; i < brick.Loop; i++) 
-                    {
-                        bricks.Add(MakeBrick(brick.Type, new(x, y), brick.Colour));
-                        bricks_left++;
-                        x += client.Width / 11.0f - BRICK_PADDING;
-                        if (x > client.Width - 20)
-                        {
-                            x = BRICK_PADDING;
-                            y += Brick.Height - 8;
-                        }
-                    }
-                }
+                    AddBrick(brick, ref x, ref y);
+                else for (int i = 0; i < brick.Loop; i++)
+                        AddBrick(brick, ref x, ref y);
             }
         }
         public Ball GetBall() => ball;
