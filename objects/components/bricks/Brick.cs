@@ -2,9 +2,9 @@
 using SquareSmash.renderer;
 using SquareSmash.Utils;
 
-namespace SquareSmash.objects.components
+namespace SquareSmash.objects.components.bricks
 {
-    internal class Brick : ColidableRenderObject
+    internal abstract class Brick : ColidableRenderObject
     {
         public static readonly int Width = 90;
         public static readonly int Height = 20;
@@ -15,6 +15,7 @@ namespace SquareSmash.objects.components
         public delegate void OnBrickDeathEventHandler(object sender, EventArgs e);
         public event OnBrickDeathEventHandler OnBrickDeath;
 
+        public abstract BrickType GetBrickType();
         public Brick(Vector2 position, Color4 colour, Level level)
         {
             Position = position;

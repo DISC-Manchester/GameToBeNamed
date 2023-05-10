@@ -1,4 +1,5 @@
 ﻿using OpenTK.Graphics.ES30;
+using OpenTK.Mathematics;
 
 namespace SquareSmash.renderer.opengl
 {
@@ -12,13 +13,24 @@ namespace SquareSmash.renderer.opengl
             Uniforms = new();
         }
 
-        public int GetUniformLocation(string name)
+        private int GetUniformLocation(string name)
         {
             if (!Uniforms.ContainsKey(name))
                 Uniforms.Add(name, GL.GetUniformLocation(Id, name));
             return Uniforms[name];
         }
 
+        public void setUniformV2(string name, Vector2 data)
+            => GL.Uniform2(GetUniformLocation(name), data);
+
+        public void setUniformF(string name, float data)
+            => GL.Uniform1(GetUniformLocation(name), data);
+
+        public void setUniformI(string name, int data)
+            => GL.Uniform1(GetUniformLocation(name), data);
+
+        public void setUniformUI(string name, uint data)
+            => GL.Uniform1(GetUniformLocation(name), data);
         public void Dispose()
         {
             Uniforms.Clear();

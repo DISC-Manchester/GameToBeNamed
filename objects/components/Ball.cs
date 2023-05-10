@@ -1,21 +1,42 @@
-﻿using OpenTK.Mathematics;
+﻿using ImGuiNET;
+using OpenTK.Mathematics;
 using OpenTK.Windowing.GraphicsLibraryFramework;
+using SquareSmash.objects.components.bricks;
 using SquareSmash.renderer;
 namespace SquareSmash.objects.components
 {
     internal class Ball : GameObject
     {
         private static readonly int Size = 20;
-
-        private Vector2 Position = new(Client.Width / 2 - Size / 2 - 15, Client.Height - 50);
+        private int LastScore = 0;
+        private int Score = 0;
+        private Vector2 Position;
         private Vector2 Velocity;
-        private float Speed = 0.001f;
+        private float Speed;
         private bool Released = false;
+
+        public Ball(Paddle paddle, float speed)
+        {
+            Speed = speed;
+            Position = paddle.GetPosition();
+            Position.X += (float)Paddle.GetWidth() / 4 - (float)Size;
+            Position.Y -= (float)Size / 2;
+        }
+
+
         public void ResetBall()
         {
             Velocity = Vector2.Zero;
             Released = false;
         }
+
+        public int GetScore()
+        {
+            Score = 0;
+            return LastScore;
+        }
+
+        public bool IsAlive() => Released;
         public override void OnUpdate(object sender, long DeltaTime)
         {
             Tuple<Level, Client> senders = (Tuple<Level, Client>)sender;
@@ -27,20 +48,20 @@ namespace SquareSmash.objects.components
             }
             else if (Released is false)
             {
-                Position = senders.Item2.paddle.GetPosition();
+                Position = senders.Item2.Paddle.GetPosition();
                 Position.X += (float)Paddle.GetWidth() / 4 - (float)Size / 2;
                 Position.Y -= (float)Size / 2;
                 Position = new(Position.X + Velocity.X * (DeltaTime * 15.0f), Position.Y + Velocity.Y * (DeltaTime * 15.0f));
                 return;
             }
 
-            if (senders.Item2.paddle.DoseFullIntersects(Position, new(Size)))
+            if (senders.Item2.Paddle.DoseFullIntersects(Position, new(Size)))
             {
                 Velocity.Y = -Velocity.Y;
-                if (senders.Item2.paddle.GetVelocity().X != 0)
+                if (senders.Item2.Paddle.GetVelocity().X != 0)
                     Velocity.X = -Velocity.X;
                 else
-                    Velocity.X += Math.Clamp(senders.Item2.paddle.GetVelocity().X,-0.001f,0.001f);
+                    Velocity.X += Math.Clamp(senders.Item2.Paddle.GetVelocity().X, -0.001f, 0.001f);
                 Position.Y -= 1;
                 Position.X += Velocity.X < 0 ? -1 : 1;
             }
@@ -66,6 +87,8 @@ namespace SquareSmash.objects.components
                     if (brick.IsActive() && brick.DoseFullIntersects(Position, new(Size)))
                     {
                         brick.Die();
+                        Score++;
+                        LastScore = Score;
                         Speed += 0.00001f;
                         Velocity.Y = -Velocity.Y;
 
@@ -81,13 +104,22 @@ namespace SquareSmash.objects.components
             }
 
             Position = new(Position.X + Velocity.X * (DeltaTime * 15.0f), Position.Y + Velocity.Y * (DeltaTime * 15.0f));
-            if (Position.Y > Client.Height)
+            if (Position.Y > Client.Instance.Height)
             {
                 ResetBall();
-                senders.Item2.paddle.ResetPaddle();
+                senders.Item2.Paddle.ResetPaddle();
             }
         }
         public override void OnRendering(object sender)
-            => ((QuadBatchRenderer)sender).AddQuad(Position, new(Size), Color4.White);
+        {
+            ImGui.SetNextWindowPos(new(80, 20), ImGuiCond.Always, new(0.5f, 0.5f));
+            bool temp = false;
+            ImGui.Begin("ScoreBoard", ref temp, ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoBackground | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoSavedSettings | ImGuiWindowFlags.NoFocusOnAppearing | ImGuiWindowFlags.NoBringToFrontOnFocus);
+            ImGui.SetWindowFontScale(1.5f);
+            ImGui.SetWindowSize(new(150, ImGui.GetTextLineHeightWithSpacing()));
+            ImGui.Text("Score: " + Convert.ToString(Score));
+            ImGui.End();
+            ((QuadBatchRenderer)sender).AddQuad(Position, new(Size), Color4.White);
+        }
     }
 }
