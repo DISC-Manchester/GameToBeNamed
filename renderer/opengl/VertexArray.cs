@@ -1,5 +1,4 @@
 ﻿using OpenTK.Graphics.ES30;
-using static OpenTK.Graphics.ES30.All;
 namespace SquareSmash.renderer.opengl
 {
     public enum DataType
@@ -18,7 +17,7 @@ namespace SquareSmash.renderer.opengl
     internal class VertexArray
     {
         private readonly int Id;
-        public VertexArray() 
+        public VertexArray()
             => Id = GL.GenVertexArray();
 
         public void Bind()
