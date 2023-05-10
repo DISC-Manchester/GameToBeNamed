@@ -43,11 +43,11 @@ namespace SquareSmash.objects.components
         public override void OnRendering(object sender)
         {
             ((QuadBatchRenderer)sender).AddQuad(Position, new(Width, Height), Colours.DiscPaddle);
-            float x = Client.Instance.Width - 40;
+            float x = Client.Instance.Width - 35;
             for (uint i = 0; i <= Lives; i++)
             {
-                ((QuadBatchRenderer)sender).AddQuad(new(x, 40), new(40, 40), Color4.Coral);
-                x -= (Client.Instance.Width / 11.0f) - 40;
+                ((QuadBatchRenderer)sender).AddQuad(new(x, 35), new(40, 40), Color4.Coral);
+                x -= (Client.Instance.Width / 11.0f) - 35;
             }
         }
         public override bool DoseFullIntersects(Vector2 position, Vector2 size)

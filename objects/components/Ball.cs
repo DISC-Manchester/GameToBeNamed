@@ -1,6 +1,7 @@
 ﻿using ImGuiNET;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.GraphicsLibraryFramework;
+using SquareSmash.objects.components.bricks;
 using SquareSmash.renderer;
 namespace SquareSmash.objects.components
 {
@@ -11,11 +12,12 @@ namespace SquareSmash.objects.components
         private int Score = 0;
         private Vector2 Position;
         private Vector2 Velocity;
-        private float Speed = 0.001f;
+        private float Speed;
         private bool Released = false;
 
-        public Ball(Paddle paddle)
+        public Ball(Paddle paddle, float speed)
         {
+            Speed = speed;
             Position = paddle.GetPosition();
             Position.X += (float)Paddle.GetWidth() / 4 - (float)Size;
             Position.Y -= (float)Size / 2;
@@ -111,11 +113,11 @@ namespace SquareSmash.objects.components
         }
         public override void OnRendering(object sender)
         {
-            ImGui.SetNextWindowPos(new(60,25), ImGuiCond.Always, new(0.5f, 0.5f));
+            ImGui.SetNextWindowPos(new(80,20), ImGuiCond.Always, new(0.5f, 0.5f));
             bool temp = false;
             ImGui.Begin("ScoreBoard", ref temp, ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoBackground | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoSavedSettings | ImGuiWindowFlags.NoFocusOnAppearing | ImGuiWindowFlags.NoBringToFrontOnFocus);
             ImGui.SetWindowFontScale(1.5f);
-            ImGui.SetWindowSize(new(100, ImGui.GetTextLineHeightWithSpacing()));
+            ImGui.SetWindowSize(new(150, ImGui.GetTextLineHeightWithSpacing()));
             ImGui.Text("Score: " + Convert.ToString(Score));
             ImGui.End();
             ((QuadBatchRenderer)sender).AddQuad(Position, new(Size), Color4.White);

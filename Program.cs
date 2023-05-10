@@ -64,7 +64,7 @@ namespace SquareSmash
                 if (KeyboardState.IsKeyDown(Keys.Enter))
                 {
                     GameRestart = false;
-                    level = new Level(this);
+                    level = new(this, "assets/levels/level_" + Convert.ToString(CurrentLevel) + ".json");
                 }
                 else
                     return;
@@ -94,7 +94,7 @@ namespace SquareSmash
                 ImGui.Begin("Text", ref temp, ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoBackground | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoSavedSettings | ImGuiWindowFlags.NoFocusOnAppearing | ImGuiWindowFlags.NoBringToFrontOnFocus);
                 ImGui.SetWindowFontScale(3.0f);
                 ImGui.SetWindowSize(new(500, ImGui.GetTextLineHeightWithSpacing() * 2));
-                ImGui.Text("Press Space To Restart");
+                ImGui.Text("Press Enter To Restart");
                 ImGui.Text("\tFinal Score: " + Convert.ToString(LastScore));
                 ImGui.End();
             }
@@ -127,19 +127,19 @@ namespace SquareSmash
             GameRestart = false;
             Width = WidthIn;
             Height = HeightIn;
-            Title += ": OpenGL Version: " + GL.GetString(StringName.Version);
             GL.DebugMessageCallback(DebugMessageDelegate, IntPtr.Zero);
             GL.ClearColor(Color4.Black);
             Controller = new ImGuiController(ClientSize.X, ClientSize.Y);
             Renderer = new();
             Paddle = new();
-            level = new(this);
+            level = new(this, "assets/levels/level_" + Convert.ToString(CurrentLevel) + ".json");
             PreviousTime = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
         }
 
         public void LevelWon()
         {
-            level = new Level(this);
+            CurrentLevel++;
+            level = new Level(this,"assets/levels/level_" + Convert.ToString(CurrentLevel) + ".json");
         }
 
         private int LastScore = 0;
@@ -152,6 +152,7 @@ namespace SquareSmash
         public QuadBatchRenderer Renderer { get; private set; }
         public Paddle Paddle { get; private set; }
         public bool GameRestart { get; private set; }
+        private int CurrentLevel = 1;
         public Level level;
         public ImGuiController Controller;
         private static readonly DebugProc DebugMessageDelegate = OnDebugMessage;

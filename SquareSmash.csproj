@@ -24,4 +24,9 @@
   <ItemGroup>
     <Compile Remove="temp.cs" />
   </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="assets\levels\level_1.json" />
+    <None Remove="assets\levels\level_2.json" />
+  </ItemGroup>
 </Project>
