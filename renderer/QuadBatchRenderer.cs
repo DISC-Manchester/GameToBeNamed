@@ -2,8 +2,6 @@
 using OpenTK.Graphics.ES30;
 using SquareSmash.renderer.opengl;
 using SquareSmash.Utils;
-using ImGuiNET;
-using System;
 
 namespace SquareSmash.renderer
 {
@@ -64,7 +62,7 @@ namespace SquareSmash.renderer
 
         public void Flush()
         {
-           if (quadVertices.Count == 0)
+            if (quadVertices.Count == 0)
                 return;
             array.Bind();
             GL.BufferData(BufferTarget.ArrayBuffer, quadVertices.Count * 6 * sizeof(float), quadVertices.ToArray(), BufferUsageHint.DynamicDraw);
