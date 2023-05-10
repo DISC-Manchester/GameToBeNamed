@@ -5,6 +5,7 @@
     <TargetFramework>net7.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>
@@ -14,8 +15,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="ImGui.NET" Version="1.89.5" />
     <PackageReference Include="MongoDB.Driver" Version="2.19.1" />
     <PackageReference Include="OpenTK" Version="4.7.7" />
+    <Content Include="assets/**" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Remove="temp.cs" />
+  </ItemGroup>
 </Project>

@@ -8,11 +8,11 @@ namespace SquareSmash.Utils
 
         public static void ToWorldSpace(ref Vector2 position, ref Vector2 size)
         {
-            position.X = (position.X - Client.Width / 2f) / (Client.Width / 2f);
-            position.Y = (Client.Height / 2f - position.Y) / (Client.Height / 2f);
+            position.X = (position.X - Client.Instance.Width / 2f) / (Client.Instance.Width / 2f);
+            position.Y = (Client.Instance.Height / 2f - position.Y) / (Client.Instance.Height / 2f);
 
-            size.X /= Client.Width;
-            size.Y /= Client.Height;
+            size.X /= Client.Instance.Width;
+            size.Y /= Client.Instance.Height;
         }
 
         public static bool DoseFullIntersects(Vector2 position, Vector2 size, Vector2 position_2, Vector2 size_2)

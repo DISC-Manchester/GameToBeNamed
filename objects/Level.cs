@@ -7,15 +7,16 @@ namespace SquareSmash.objects
     {
         private int bricks_left = 112;
         protected List<Brick> bricks = new();
-        protected Ball ball = new();
+        protected Ball ball;
         protected Wall left;
         protected Wall top;
         protected Wall right;
-        public Level()
+        public Level(Client client)
         {
-            left = new(new(0, Client.Height), 20, Client.Height * 2);
-            top = new(new(0, 10), Client.Width * 2, 20);
-            right = new(new(Client.Width - 10, Client.Height), 20, Client.Height * 2);
+            ball = new Ball(client.Paddle);
+            left = new(new(0, client.Height), 20, client.Height * 2);
+            top = new(new(0, 10), client.Width * 2, 20);
+            right = new(new(client.Width - 10, client.Height), 20, client.Height * 2);
             uint BRICK_PADDING = 16;
             float x = BRICK_PADDING;
             float y = 120;
@@ -32,15 +33,15 @@ namespace SquareSmash.objects
                     colour = Colours.DiscGreen;
 
                 bricks.Add(new(new(x, y), colour, this));
-                x += Client.Width / 11.0f - BRICK_PADDING;
-                if (x > Client.Width - 20)
+                x += client.Width / 11.0f - BRICK_PADDING;
+                if (x > client.Width - 20)
                 {
                     x = BRICK_PADDING;
                     y += Brick.Height - 8;
                 }
             }
         }
-
+        public Ball GetBall() => ball;
         public List<Brick> GetBricks() => bricks;
         public Wall GetWallLeft() => left;
         public Wall GetWallTop() => top;
