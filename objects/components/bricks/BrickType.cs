@@ -4,5 +4,6 @@
     {
         AIR,
         NORMAL,
+        LIFE
     }
 }

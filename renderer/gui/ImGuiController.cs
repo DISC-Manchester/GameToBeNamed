@@ -1,10 +1,11 @@
 ﻿using ImGuiNET;
-using System.Runtime.CompilerServices;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
+using SquareSmash.renderer.opengl;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using ErrorCode = OpenTK.Graphics.OpenGL4.ErrorCode;
 
 //https://github.com/NogginBops/ImGui.NET_OpenTK_Sample/tree/opentk4.0/Dear%20ImGui%20Sample
@@ -22,32 +23,24 @@ namespace SquareSmash.renderer.gui
 
         private int _fontTexture;
 
-        private int _shader;
-        private int _shaderFontTextureLocation;
-        private int _shaderProjectionMatrixLocation;
+        private ShaderHandle ShaderHandle;
 
-        private int _windowWidth;
-        private int _windowHeight;
-
-        private System.Numerics.Vector2 _scaleFactor = System.Numerics.Vector2.One;
-
+#if DEBUG
         private static bool KHRDebugAvailable;
+#endif
 
         /// <summary>
         /// Constructs a new ImGuiController.
         /// </summary>
-        public ImGuiController(int width, int height)
+        public ImGuiController()
         {
-            _windowWidth = width;
-            _windowHeight = height;
-
+#if DEBUG
             int major = GL.GetInteger(GetPName.MajorVersion);
             int minor = GL.GetInteger(GetPName.MinorVersion);
-
 #pragma warning disable S3010 // Static fields should not be updated in constructors
             KHRDebugAvailable = (major == 4 && minor >= 3) || IsExtensionSupported("KHR_debug");
 #pragma warning restore S3010 // Static fields should not be updated in constructors
-
+#endif
             IntPtr context = ImGui.CreateContext();
             ImGui.SetCurrentContext(context);
             var io = ImGui.GetIO();
@@ -56,23 +49,11 @@ namespace SquareSmash.renderer.gui
             io.BackendFlags |= ImGuiBackendFlags.RendererHasVtxOffset;
 
             CreateDeviceResources();
-            SetKeyMappings();
 
             SetPerFrameImGuiData(1f / 60f);
 
             ImGui.NewFrame();
             _frameBegun = true;
-        }
-
-        public void WindowResized(int width, int height)
-        {
-            _windowWidth = width;
-            _windowHeight = height;
-        }
-
-        public void DestroyDeviceObjects()
-        {
-            Dispose();
         }
 
         public void CreateDeviceResources()
@@ -85,16 +66,21 @@ namespace SquareSmash.renderer.gui
 
             _vertexArray = GL.GenVertexArray();
             GL.BindVertexArray(_vertexArray);
+#if DEBUG
             LabelObject(ObjectLabelIdentifier.VertexArray, _vertexArray, "ImGui");
-
+#endif
             _vertexBuffer = GL.GenBuffer();
             GL.BindBuffer(BufferTarget.ArrayBuffer, _vertexBuffer);
+#if DEBUG
             LabelObject(ObjectLabelIdentifier.Buffer, _vertexBuffer, "VBO: ImGui");
+#endif           
             GL.BufferData(BufferTarget.ArrayBuffer, _vertexBufferSize, IntPtr.Zero, BufferUsageHint.DynamicDraw);
 
             _indexBuffer = GL.GenBuffer();
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, _indexBuffer);
+#if DEBUG
             LabelObject(ObjectLabelIdentifier.Buffer, _indexBuffer, "EBO: ImGui");
+#endif
             GL.BufferData(BufferTarget.ElementArrayBuffer, _indexBufferSize, IntPtr.Zero, BufferUsageHint.DynamicDraw);
 
             RecreateFontDeviceTexture();
@@ -121,10 +107,7 @@ void main()
 {
     outputColor = color * texture(in_fontTexture, texCoord);
 }";
-
-            _shader = CreateProgram("ImGui", VertexSource, FragmentSource);
-            _shaderProjectionMatrixLocation = GL.GetUniformLocation(_shader, "projection_matrix");
-            _shaderFontTextureLocation = GL.GetUniformLocation(_shader, "in_fontTexture");
+            ShaderHandle = Shader.Create(VertexSource, FragmentSource);
 
             int stride = Unsafe.SizeOf<ImDrawVert>();
             GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, stride, 0);
@@ -137,8 +120,9 @@ void main()
 
             GL.BindVertexArray(prevVAO);
             GL.BindBuffer(BufferTarget.ArrayBuffer, prevArrayBuffer);
-
+#if DEBUG
             CheckGLError("End of ImGui setup");
+#endif
         }
 
         /// <summary>
@@ -158,8 +142,9 @@ void main()
             _fontTexture = GL.GenTexture();
             GL.BindTexture(TextureTarget.Texture2D, _fontTexture);
             GL.TexStorage2D(TextureTarget2d.Texture2D, mips, SizedInternalFormat.Rgba8, width, height);
+#if DEBUG
             LabelObject(ObjectLabelIdentifier.Texture, _fontTexture, "ImGui Text Atlas");
-
+#endif
             GL.TexSubImage2D(TextureTarget.Texture2D, 0, 0, 0, width, height, PixelFormat.Bgra, PixelType.UnsignedByte, pixels);
 
             GL.GenerateMipmap(GenerateMipmapTarget.Texture2D);
@@ -200,12 +185,9 @@ void main()
         public void Update(GameWindow wnd, float deltaSeconds)
         {
             if (_frameBegun)
-            {
                 ImGui.Render();
-            }
 
             SetPerFrameImGuiData(deltaSeconds);
-            UpdateImGuiInput(wnd);
 
             _frameBegun = true;
             ImGui.NewFrame();
@@ -219,93 +201,16 @@ void main()
         {
             ImGuiIOPtr io = ImGui.GetIO();
             io.DisplaySize = new System.Numerics.Vector2(
-                _windowWidth / _scaleFactor.X,
-                _windowHeight / _scaleFactor.Y);
-            io.DisplayFramebufferScale = _scaleFactor;
+                Client.Instance.Size.X / 1.0f,
+                Client.Instance.Size.Y / 1.0f);
+            io.DisplayFramebufferScale = new(1.0f, 1.0f);
             io.DeltaTime = deltaSeconds; // DeltaTime is in seconds.
-        }
-
-        readonly List<char> PressedChars = new();
-
-        private void UpdateImGuiInput(GameWindow wnd)
-        {
-            ImGuiIOPtr io = ImGui.GetIO();
-
-            MouseState MouseState = wnd.MouseState;
-            KeyboardState KeyboardState = wnd.KeyboardState;
-
-            io.MouseDown[0] = MouseState[MouseButton.Left];
-            io.MouseDown[1] = MouseState[MouseButton.Right];
-            io.MouseDown[2] = MouseState[MouseButton.Middle];
-
-            var screenPoint = new Vector2i((int)MouseState.X, (int)MouseState.Y);
-            var point = screenPoint;
-            io.MousePos = new System.Numerics.Vector2(point.X, point.Y);
-
-            foreach (Keys key in Enum.GetValues(typeof(Keys)))
-            {
-                if (key == Keys.Unknown)
-                {
-                    continue;
-                }
-                io.KeysDown[(int)key] = KeyboardState.IsKeyDown(key);
-            }
-
-            foreach (var c in PressedChars)
-            {
-                io.AddInputCharacter(c);
-            }
-            PressedChars.Clear();
-
-            io.KeyCtrl = KeyboardState.IsKeyDown(Keys.LeftControl) || KeyboardState.IsKeyDown(Keys.RightControl);
-            io.KeyAlt = KeyboardState.IsKeyDown(Keys.LeftAlt) || KeyboardState.IsKeyDown(Keys.RightAlt);
-            io.KeyShift = KeyboardState.IsKeyDown(Keys.LeftShift) || KeyboardState.IsKeyDown(Keys.RightShift);
-            io.KeySuper = KeyboardState.IsKeyDown(Keys.LeftSuper) || KeyboardState.IsKeyDown(Keys.RightSuper);
-        }
-
-        internal void PressChar(char keyChar)
-        {
-            PressedChars.Add(keyChar);
-        }
-
-        internal static void MouseScroll(Vector2 offset)
-        {
-            ImGuiIOPtr io = ImGui.GetIO();
-
-            io.MouseWheel = offset.Y;
-            io.MouseWheelH = offset.X;
-        }
-
-        private static void SetKeyMappings()
-        {
-            ImGuiIOPtr io = ImGui.GetIO();
-            io.KeyMap[(int)ImGuiKey.Tab] = (int)Keys.Tab;
-            io.KeyMap[(int)ImGuiKey.LeftArrow] = (int)Keys.Left;
-            io.KeyMap[(int)ImGuiKey.RightArrow] = (int)Keys.Right;
-            io.KeyMap[(int)ImGuiKey.UpArrow] = (int)Keys.Up;
-            io.KeyMap[(int)ImGuiKey.DownArrow] = (int)Keys.Down;
-            io.KeyMap[(int)ImGuiKey.PageUp] = (int)Keys.PageUp;
-            io.KeyMap[(int)ImGuiKey.PageDown] = (int)Keys.PageDown;
-            io.KeyMap[(int)ImGuiKey.Home] = (int)Keys.Home;
-            io.KeyMap[(int)ImGuiKey.End] = (int)Keys.End;
-            io.KeyMap[(int)ImGuiKey.Delete] = (int)Keys.Delete;
-            io.KeyMap[(int)ImGuiKey.Backspace] = (int)Keys.Backspace;
-            io.KeyMap[(int)ImGuiKey.Enter] = (int)Keys.Enter;
-            io.KeyMap[(int)ImGuiKey.Escape] = (int)Keys.Escape;
-            io.KeyMap[(int)ImGuiKey.A] = (int)Keys.A;
-            io.KeyMap[(int)ImGuiKey.C] = (int)Keys.C;
-            io.KeyMap[(int)ImGuiKey.V] = (int)Keys.V;
-            io.KeyMap[(int)ImGuiKey.X] = (int)Keys.X;
-            io.KeyMap[(int)ImGuiKey.Y] = (int)Keys.Y;
-            io.KeyMap[(int)ImGuiKey.Z] = (int)Keys.Z;
         }
 
         private void RenderImDrawData(ImDrawDataPtr draw_data)
         {
             if (draw_data.CmdListsCount == 0)
-            {
                 return;
-            }
 
             // Get intial state.
             int prevVAO = GL.GetInteger(GetPName.VertexArrayBinding);
@@ -373,14 +278,16 @@ void main()
                 -1.0f,
                 1.0f);
 
-            GL.UseProgram(_shader);
-            GL.UniformMatrix4(_shaderProjectionMatrixLocation, false, ref mvp);
-            GL.Uniform1(_shaderFontTextureLocation, 0);
+            Shader.Bind(ShaderHandle);
+            ShaderHandle.SetUniformI("in_fontTexture", 0);
+            ShaderHandle.SetUniformM4("projection_matrix", ref mvp);
+#if DEBUG
             CheckGLError("Projection");
-
+#endif
             GL.BindVertexArray(_vertexArray);
+#if DEBUG
             CheckGLError("VAO");
-
+#endif
             draw_data.ScaleClipRects(io.DisplayFramebufferScale);
 
             GL.Enable(EnableCap.Blend);
@@ -396,38 +303,38 @@ void main()
                 ImDrawListPtr cmd_list = draw_data.CmdListsRange[n];
 
                 GL.BufferSubData(BufferTarget.ArrayBuffer, IntPtr.Zero, cmd_list.VtxBuffer.Size * Unsafe.SizeOf<ImDrawVert>(), cmd_list.VtxBuffer.Data);
+#if DEBUG
                 CheckGLError($"Data Vert {n}");
-
+#endif
                 GL.BufferSubData(BufferTarget.ElementArrayBuffer, IntPtr.Zero, cmd_list.IdxBuffer.Size * sizeof(ushort), cmd_list.IdxBuffer.Data);
+#if DEBUG
                 CheckGLError($"Data Idx {n}");
-
+#endif
                 for (int cmd_i = 0; cmd_i < cmd_list.CmdBuffer.Size; cmd_i++)
                 {
                     ImDrawCmdPtr pcmd = cmd_list.CmdBuffer[cmd_i];
                     if (pcmd.UserCallback != IntPtr.Zero)
-                    {
                         throw new NotImplementedException();
-                    }
                     else
                     {
                         GL.ActiveTexture(TextureUnit.Texture0);
                         GL.BindTexture(TextureTarget.Texture2D, (int)pcmd.TextureId);
+#if DEBUG
                         CheckGLError("Texture");
-
+#endif
                         // We do _windowHeight - (int)clip.W instead of (int)clip.Y because gl has flipped Y when it comes to these coordinates
                         var clip = pcmd.ClipRect;
-                        GL.Scissor((int)clip.X, _windowHeight - (int)clip.W, (int)(clip.Z - clip.X), (int)(clip.W - clip.Y));
+                        GL.Scissor((int)clip.X, Client.Instance.Size.Y - (int)clip.W, (int)(clip.Z - clip.X), (int)(clip.W - clip.Y));
+#if DEBUG
                         CheckGLError("Scissor");
-
+#endif
                         if ((io.BackendFlags & ImGuiBackendFlags.RendererHasVtxOffset) != 0)
-                        {
                             GL.DrawElementsBaseVertex(PrimitiveType.Triangles, (int)pcmd.ElemCount, DrawElementsType.UnsignedShort, (IntPtr)(pcmd.IdxOffset * sizeof(ushort)), unchecked((int)pcmd.VtxOffset));
-                        }
                         else
-                        {
                             GL.DrawElements(BeginMode.Triangles, (int)pcmd.ElemCount, DrawElementsType.UnsignedShort, (int)pcmd.IdxOffset * sizeof(ushort));
-                        }
+#if DEBUG
                         CheckGLError("Draw");
+#endif
                     }
                 }
             }
@@ -457,6 +364,7 @@ void main()
         /// <summary>
         /// Frees all graphics resources used by the renderer.
         /// </summary>
+        /// 
         public void Dispose()
         {
             GL.DeleteVertexArray(_vertexArray);
@@ -464,9 +372,11 @@ void main()
             GL.DeleteBuffer(_indexBuffer);
 
             GL.DeleteTexture(_fontTexture);
-            GL.DeleteProgram(_shader);
+            Shader.Delete(ShaderHandle);
         }
+        ~ImGuiController() => Dispose();
 
+#if DEBUG
         public static void LabelObject(ObjectLabelIdentifier objLabelIdent, int glObject, string name)
         {
             if (KHRDebugAvailable)
@@ -484,62 +394,16 @@ void main()
 
             return false;
         }
+#endif
 
-        public static int CreateProgram(string name, string vertexSource, string fragmentSoruce)
-        {
-            int program = GL.CreateProgram();
-            LabelObject(ObjectLabelIdentifier.Program, program, $"Program: {name}");
-
-            int vertex = CompileShader(name, ShaderType.VertexShader, vertexSource);
-            int fragment = CompileShader(name, ShaderType.FragmentShader, fragmentSoruce);
-
-            GL.AttachShader(program, vertex);
-            GL.AttachShader(program, fragment);
-
-            GL.LinkProgram(program);
-
-            GL.GetProgram(program, GetProgramParameterName.LinkStatus, out int success);
-            if (success == 0)
-            {
-                string info = GL.GetProgramInfoLog(program);
-                Debug.WriteLine($"GL.LinkProgram had info log [{name}]:\n{info}");
-            }
-
-            GL.DetachShader(program, vertex);
-            GL.DetachShader(program, fragment);
-
-            GL.DeleteShader(vertex);
-            GL.DeleteShader(fragment);
-
-            return program;
-        }
-
-        private static int CompileShader(string name, ShaderType type, string source)
-        {
-            int shader = GL.CreateShader(type);
-            LabelObject(ObjectLabelIdentifier.Shader, shader, $"Shader: {name}");
-
-            GL.ShaderSource(shader, source);
-            GL.CompileShader(shader);
-
-            GL.GetShader(shader, ShaderParameter.CompileStatus, out int success);
-            if (success == 0)
-            {
-                string info = GL.GetShaderInfoLog(shader);
-                Debug.WriteLine($"GL.CompileShader for shader '{name}' [{type}] had info log:\n{info}");
-            }
-
-            return shader;
-        }
-
+#if DEBUG
         public static void CheckGLError(string title)
         {
             ErrorCode error;
             int i = 1;
             while ((error = GL.GetError()) != ErrorCode.NoError)
-            {
                 Debug.Print($"{title} ({i++}): {error}");
-            }
         }
+#endif
     }
 }

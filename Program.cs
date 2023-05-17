@@ -8,12 +8,15 @@ using SquareSmash.objects;
 using SquareSmash.objects.components;
 using SquareSmash.renderer;
 using SquareSmash.renderer.gui;
+using System.Diagnostics;
+#if DEBUG
 using System.Runtime.InteropServices;
-
+#endif
 namespace SquareSmash
 {
     internal class Client : GameWindow
     {
+#if DEBUG
         private static void OnDebugMessage(DebugSource source, DebugType type, int id, DebugSeverity severity, int length, IntPtr pMessage, IntPtr pUserParam)
         {
             if (severity == DebugSeverity.DebugSeverityNotification || severity == DebugSeverity.DebugSeverityLow || severity == DebugSeverity.DebugSeverityMedium)
@@ -23,48 +26,27 @@ namespace SquareSmash
             if (type == DebugType.DebugTypeError)
                 throw new InvalidOperationException(message);
         }
-
-        protected override void OnResize(ResizeEventArgs e)
-        {
-            base.OnResize(e);
-            GL.Viewport(0, 0, ClientSize.X, ClientSize.Y);
-            Controller.WindowResized(ClientSize.X, ClientSize.Y);
-        }
-
-        protected override void OnTextInput(TextInputEventArgs e)
-        {
-            base.OnTextInput(e);
-            Controller.PressChar((char)e.Unicode);
-            PreviousTime = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
-            GL.ClearColor(0, 0, 0, 1);
-        }
-
-        protected override void OnMouseWheel(MouseWheelEventArgs e)
-        {
-            base.OnMouseWheel(e);
-            ImGuiController.MouseScroll(e.Offset);
-        }
-
-        protected override void OnUnload()
-        {
-            Renderer.Flush();
-            ImGui.DestroyContext();
-            base.OnUnload();
-        }
+#endif
 
         protected override void OnUpdateFrame(FrameEventArgs args)
         {
             base.OnUpdateFrame(args);
-            long currentTime = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
-            long DeltaTime = (currentTime - PreviousTime);
-            Controller.Update(this, DeltaTime / 1000.0f);
-            PreviousTime = currentTime;
+            float DeltaTime = (float)stopwatch.Elapsed.TotalMilliseconds;
+            stopwatch.Restart();
+            // Limit the frame time if it's lower than the target frame time
+            if (DeltaTime < 16)
+            {
+                int sleepTime = 16 - (int)DeltaTime;
+                // Sleep for the remaining time to limit the frame rate
+                Thread.Sleep(sleepTime);
+            }
+            Controller.Update(this, DeltaTime);
             if (GameRestart)
             {
                 if (KeyboardState.IsKeyDown(Keys.Enter))
                 {
                     GameRestart = false;
-                    level = new(this, "assets/levels/level_" + Convert.ToString(CurrentLevel) + ".json");
+                    level = new(this, "assets.levels.level_" + Convert.ToString(CurrentLevel) + ".json");
                 }
                 else
                     return;
@@ -83,9 +65,12 @@ namespace SquareSmash
         {
             base.OnRenderFrame(args);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
+            Renderer.AddQuad(new(0, Client.Instance.Size.Y), new(20, Client.Instance.Size.Y * 2), new(211, 211, 211));
+            Renderer.AddQuad(new(0, 10), new(Client.Instance.Size.X * 2, 20), new(211, 211, 211));
+            Renderer.AddQuad(new(Client.Instance.Size.X - 10, Client.Instance.Size.Y), new(20, Client.Instance.Size.Y * 2), new(211, 211, 211));
+            Client.Instance.Renderer.FlushPlain();
             Paddle.OnRendering(Renderer);
             level.OnRendering(Renderer);
-            Renderer.Flush();
             var screen_size = ImGui.GetIO().DisplaySize;
             ImGui.SetNextWindowPos(new System.Numerics.Vector2((screen_size.X / 2), (screen_size.Y / 2)), ImGuiCond.Always, new System.Numerics.Vector2(0.5f, 0.5f));
             bool temp = false;
@@ -94,8 +79,8 @@ namespace SquareSmash
                 ImGui.Begin("Text", ref temp, ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoBackground | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoSavedSettings | ImGuiWindowFlags.NoFocusOnAppearing | ImGuiWindowFlags.NoBringToFrontOnFocus);
                 ImGui.SetWindowFontScale(3.0f);
                 ImGui.SetWindowSize(new(500, ImGui.GetTextLineHeightWithSpacing() * 2));
-                ImGui.Text("Press Enter To Restart");
                 ImGui.Text("\tFinal Score: " + Convert.ToString(LastScore));
+                ImGui.Text("Press Enter To Restart");
                 ImGui.End();
             }
             else
@@ -109,59 +94,76 @@ namespace SquareSmash
                 }
             }
             Controller.Render();
+#if DEBUG
             ImGuiController.CheckGLError("End of frame");
+#endif
             SwapBuffers();
         }
 
-        public Client(int WidthIn, int HeightIn)
+        ~Client()
+        {
+            stopwatch.Stop();
+            Renderer.Dispose();
+            ImGui.DestroyContext();
+        }
+
+        public Client(Vector2i size)
            : base(GameWindowSettings.Default, new()
            {
-               Size = new(WidthIn, HeightIn),
+               Size = size,
+#if DEBUG
+               Title = "DISCout - Debug Build",
+#else
                Title = "DISCout",
-               Flags = ContextFlags.ForwardCompatible | ContextFlags.Debug,
-               MinimumSize = new(WidthIn, HeightIn),
-               MaximumSize = new(WidthIn, HeightIn)
+#endif
+               Flags = ContextFlags.ForwardCompatible
+#if DEBUG
+               | ContextFlags.Debug,
+#else
+               ,
+#endif
+               MinimumSize = size,
+               MaximumSize =size
            })
         {
             Instance = this;
-            GameRestart = false;
-            Width = WidthIn;
-            Height = HeightIn;
+#if DEBUG
             GL.DebugMessageCallback(DebugMessageDelegate, IntPtr.Zero);
-            GL.ClearColor(Color4.Black);
-            Controller = new ImGuiController(ClientSize.X, ClientSize.Y);
+#endif
+            Controller = new();
             Renderer = new();
             Paddle = new();
-            level = new(this, "assets/levels/level_" + Convert.ToString(CurrentLevel) + ".json");
-            PreviousTime = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
+            level = new(this, "assets.levels.level_1.json");
+            stopwatch.Start();
         }
 
         public void LevelWon()
         {
             CurrentLevel++;
-            level = new Level(this, "assets/levels/level_" + Convert.ToString(CurrentLevel) + ".json");
+            level = new Level(this, "assets.levels.level_" + Convert.ToString(CurrentLevel) + ".json");
         }
 
         private int LastScore = 0;
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         public static Client Instance { get; set; }
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-        public int Width { get; private set; }
-        public int Height { get; private set; }
-        private long PreviousTime { get; set; }
         public QuadBatchRenderer Renderer { get; private set; }
         public Paddle Paddle { get; private set; }
-        public bool GameRestart { get; private set; }
+
+        private readonly Stopwatch stopwatch = new();
+        public bool GameRestart { get; private set; } = false;
         private int CurrentLevel = 1;
         public Level level;
         public ImGuiController Controller;
+#if DEBUG
         private static readonly DebugProc DebugMessageDelegate = OnDebugMessage;
+#endif
     }
     static class ProgramMain
     {
         public static void Main()
         {
-            Client client = new(720, 640);
+            Client client = new(new(720, 640));
             client.Run();
         }
     }

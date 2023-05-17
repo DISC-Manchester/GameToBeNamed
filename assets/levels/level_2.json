@@ -1,5 +1,5 @@
 ﻿{
-	"BaseBallSpeed": 0.002,
+	"BaseBallSpeed": 0.125,
 	"Bricks": [
 		{
 			"Colour": "DiscGreen",
@@ -9,7 +9,22 @@
 		{
 			"Colour": "DiscOrange",
 			"Type": 1,
-			"Repeat": 28
+			"Repeat": 14
+		},
+		{
+			"Colour": "DiscOrange",
+			"Type": 1,
+			"Repeat": 6
+		},
+		{
+			"Colour": "DiscOrange",
+			"Type": 2,
+			"Repeat": 2
+		},
+		{
+			"Colour": "DiscOrange",
+			"Type": 1,
+			"Repeat": 6
 		},
 		{
 			"Colour": "DiscBlue",

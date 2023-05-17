@@ -20,16 +20,19 @@ namespace SquareSmash.renderer.opengl
             return Uniforms[name];
         }
 
-        public void setUniformV2(string name, Vector2 data)
+        public void SetUniformM4(string name,ref Matrix4 data)
+    => GL.UniformMatrix4(GetUniformLocation(name),false,ref data);
+
+        public void SetUniformV2(string name, Vector2 data)
             => GL.Uniform2(GetUniformLocation(name), data);
 
-        public void setUniformF(string name, float data)
+        public void SetUniformF(string name, float data)
             => GL.Uniform1(GetUniformLocation(name), data);
 
-        public void setUniformI(string name, int data)
+        public void SetUniformI(string name, int data)
             => GL.Uniform1(GetUniformLocation(name), data);
 
-        public void setUniformUI(string name, uint data)
+        public void SetUniformUI(string name, uint data)
             => GL.Uniform1(GetUniformLocation(name), data);
         public void Dispose()
         {
@@ -64,7 +67,7 @@ namespace SquareSmash.renderer.opengl
             string programLinkInfoLog = GL.GetProgramInfoLog(id);
 
             if (!string.IsNullOrWhiteSpace(programLinkInfoLog))
-                throw new FileLoadException($"Shader program linking failed: {programLinkInfoLog}");
+                Console.WriteLine($"Shader program linking has problems: {programLinkInfoLog}");
 
             GL.DetachShader(id, vid);
             GL.DetachShader(id, fid);
@@ -78,9 +81,7 @@ namespace SquareSmash.renderer.opengl
         public static void Bind(ShaderHandle id) =>
             GL.UseProgram(id.Id);
 
-        public static void Delete(ShaderHandle id)
-        {
+        public static void Delete(ShaderHandle id) =>
             GL.DeleteProgram(id.Id);
-        }
     }
 }

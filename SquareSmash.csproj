@@ -6,6 +6,34 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Title>DISCout</Title>
+    <Product>DISCout</Product>
+    <PlatformTarget>x64</PlatformTarget>
+    <SignAssembly>False</SignAssembly>
+    <NeutralLanguage>en-GB</NeutralLanguage>
+    <Platforms>AnyCPU;x64</Platforms>
+    <AssemblyName>DISCout</AssemblyName>
+    <StartupObject>SquareSmash.ProgramMain</StartupObject>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <Deterministic>True</Deterministic>
+    <DebugType>full</DebugType>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <Deterministic>True</Deterministic>
+    <DebugType>full</DebugType>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Deterministic>True</Deterministic>
+    <DebugType>full</DebugType>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Deterministic>True</Deterministic>
+    <DebugType>full</DebugType>
   </PropertyGroup>
 
   <ItemGroup>
@@ -16,17 +44,12 @@
 
   <ItemGroup>
     <PackageReference Include="ImGui.NET" Version="1.89.5" />
-    <PackageReference Include="MongoDB.Driver" Version="2.19.1" />
     <PackageReference Include="OpenTK" Version="4.7.7" />
-    <Content Include="assets/**" CopyToOutputDirectory="PreserveNewest" />
+    <PackageReference Include="StbImageSharp" Version="2.27.13" />
+    <EmbeddedResource Include="assets\**" />
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Remove="temp.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Remove="assets\levels\level_1.json" />
-    <None Remove="assets\levels\level_2.json" />
+    <None Remove="assets\shaders\anti_ghost_fragment.glsl" />
   </ItemGroup>
 </Project>
