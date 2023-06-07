@@ -1,4 +1,6 @@
-﻿namespace SquareSmash.utils
+﻿using System;
+
+namespace SquareSmash.utils
 {
     [Serializable]
     public readonly struct Colour3

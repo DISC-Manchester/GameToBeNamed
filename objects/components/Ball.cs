@@ -1,30 +1,36 @@
-﻿using ImGuiNET;
+﻿using Avalonia.Controls;
+using Avalonia.Input;
+using Avalonia.Threading;
+using NAudio.Wave;
 using OpenTK.Mathematics;
-using OpenTK.Windowing.GraphicsLibraryFramework;
 using SquareSmash.objects.components.bricks;
 using SquareSmash.renderer;
+using SquareSmash.renderer.Windows;
+using SquareSmash.utils;
+using System;
+using System.Threading.Tasks;
+
 namespace SquareSmash.objects.components
 {
-    internal class Ball
+    public class Ball
     {
-        private static readonly int Size = 20;
+        private static readonly float Size = 0.03f;
         private int LastScore = 0;
-        private int Score = 0;
+        public int Score { get; set; }
         private Vector2 Position;
         private Vector2 Velocity;
+        private Vertex[] Vertices;
         private float Speed;
         private readonly float LaunchSpeed;
         private bool Released = false;
-
-        public static Vector2 GetSize() => new(Size, Size);
+        private int CoolDown = 0;
         public Ball(Paddle paddle, float speed)
         {
             LaunchSpeed = Speed = speed;
             Position = paddle.GetPosition();
-            Position.X += (float)Paddle.GetWidth() / 4 - Size;
-            Position.Y -= (float)Size / 2;
+            Position.X += 0;
+            Position.Y -= 10;
         }
-
 
         public void ResetBall()
         {
@@ -34,53 +40,87 @@ namespace SquareSmash.objects.components
 
         public int GetScore()
         {
+            LastScore = Score;
             Score = 0;
             return LastScore;
         }
 
         public bool IsAlive() => Released;
-        public void OnUpdate(object sender, float DeltaTime)
+
+        public void OnKeyDown(object sender, KeyEventArgs e)
         {
-            Tuple<Level, Client> senders = (Tuple<Level, Client>)sender;
-            if (senders.Item2.KeyboardState.IsKeyPressed(Keys.Space) && Released is false)
+            if (e.Key == Key.Space && !Released)
             {
+                DiscWindow.Instance.DisplayText.Text = "";
                 Velocity.Y = LaunchSpeed;
                 Velocity.X = Random.Shared.NextSingle() > 0.5f ? -LaunchSpeed : LaunchSpeed;
                 Released = true;
             }
-            else if (Released is false)
+        }
+        private void Play()
+        {
+            WaveOutEvent beepPlayer = new();
+            beepPlayer.Init(new WaveFileReader(AssetUtil.OpenEmbeddedFile("assets.sounds.bounce.wav")));
+            beepPlayer.Play();
+        }
+
+        public void OnUpdate(object sender, float DeltaTime)
+        {
+            Tuple<Level, DiscWindow> senders = (Tuple<Level, DiscWindow>)sender;
+            if (Released is false)
             {
                 Position = senders.Item2.Paddle.GetPosition();
-                Position.X += (float)Paddle.GetWidth() / 4 - (float)Size / 2;
-                Position.Y -= (float)Size / 2;
+                Position.X *= 10;
+                Position.Y += 5;
+                Vertices = Task.Run(() => QuadBatchRenderer.PreMakeQuad(Position, new(Size, Size), new(byte.MaxValue, byte.MaxValue, byte.MaxValue))).Result;
                 return;
             }
 
             Position += Velocity * DeltaTime;
+            Position = new(Math.Clamp(Position.X, -171, 171), Math.Clamp(Position.Y, -171, 171));
+            var task = Task.Run(() => QuadBatchRenderer.PreMakeQuad(Position, new(Size, Size), new(byte.MaxValue, byte.MaxValue, byte.MaxValue)));
+            //this is very inefficent but idk any other way
 
-            if (senders.Item2.Paddle.DoseFullIntersects(Position, new Vector2(Size)))
+            if (senders.Item2.Paddle.DoseFullIntersects(Vertices))
             {
+                _ = Task.Run(Play);
+                Velocity.Y = Math.Abs(Velocity.Y);
+            }
+            else if (Position.Y >= 170)
+            {
+                _ = Task.Run(Play);
                 Velocity.Y = -Math.Abs(Velocity.Y);
             }
-            else if (Position.X <= 10)
+            else if (Position.X <= -170)
+            {
+                _ = Task.Run(Play);
                 Velocity.X = Math.Abs(Velocity.X);
-            else if (Position.X  > Client.Instance.Size.X - 20)
+            }
+            else if (Position.X >= 170)
+            {
+                _ = Task.Run(Play);
                 Velocity.X = -Math.Abs(Velocity.X);
-            else if (Position.Y <= 20)
-                Velocity.Y = Math.Abs(Velocity.Y);
+            }
             else
             {
                 foreach (Brick brick in senders.Item1.GetBricks())
                 {
-                    break;
-                    if (brick.IsActive() && brick.DoseFullIntersects(Position, new Vector2(Size)))
+                    if (brick.IsActive() && brick.DoseFullIntersects(Vertices))
                     {
-                        brick.Die();
-                        Speed *= 1.0001f;
-                        Score++;
-                        if (brick.GetBrickType() == BrickType.LIFE)
-                            senders.Item2.Paddle.AddLife();
-                        Velocity.Y = Math.Abs(Velocity.Y) + Speed;
+                        _ = Task.Run(Play);
+                        if (CoolDown == 0)
+                        {
+                            CoolDown = 5;
+                            brick.Die();
+                            Speed *= 1.0000001f;
+                            Score++;
+                            if (brick.GetBrickType() == BrickType.LIFE)
+                                senders.Item2.Paddle.AddLife();
+                            Velocity.Y = -(Math.Abs(Velocity.Y) + Speed);
+                        }
+                        else
+                            Velocity.Y = -Math.Abs(Velocity.Y);
+
                         if (Random.Shared.NextSingle() <= 0.2f)
                         {
                             if (Random.Shared.NextSingle() <= 0.5f)
@@ -91,17 +131,22 @@ namespace SquareSmash.objects.components
                         else
                             Velocity.X = Random.Shared.NextSingle() > 0.25f ? Velocity.X + Speed : Math.Abs(Velocity.X) + Speed;
 
-                        Velocity.X = Math.Clamp(Velocity.X, -LaunchSpeed * 3, LaunchSpeed * 3);
-                        Velocity.Y = Math.Clamp(Velocity.Y, -LaunchSpeed * 3, LaunchSpeed * 3);
+                        Velocity.X = Math.Clamp(Velocity.X, -LaunchSpeed * 2, LaunchSpeed * 2);
+                        Velocity.Y = Math.Clamp(Velocity.Y, -LaunchSpeed * 2, LaunchSpeed * 2);
                         break;
                     }
                 }
             }
 
+            if (CoolDown != 0)
+                CoolDown--;
+
             if (Velocity.Y == 0)
                 Velocity.Y += LaunchSpeed;
 
-            if (Position.Y > Client.Instance.Size.Y)
+            Vertices = task.Result;
+
+            if (Position.Y <= -170)
             {
                 ResetBall();
                 LastScore = Score;
@@ -111,18 +156,8 @@ namespace SquareSmash.objects.components
         }
         public void OnRendering(object sender)
         {
-            ImGui.SetNextWindowPos(new(80, 20), ImGuiCond.Always, new(0.5f, 0.5f));
-            bool temp = false;
-            ImGui.Begin("ScoreBoard", ref temp, ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoBackground | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoSavedSettings | ImGuiWindowFlags.NoFocusOnAppearing | ImGuiWindowFlags.NoBringToFrontOnFocus);
-            ImGui.SetWindowFontScale(1.5f);
-            ImGui.SetWindowSize(new(150, ImGui.GetTextLineHeightWithSpacing()));
-            ImGui.Text("Score: " + Convert.ToString(Score));
-            ImGui.End();
-            ImGui.Begin("debug", ref temp, ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoSavedSettings);
-            ImGui.SetWindowSize(new(175, ImGui.GetTextLineHeightWithSpacing() * 3));
-            ImGui.Text("pos: " + Position.ToString());
-            ImGui.End();
-            ((QuadBatchRenderer)sender).AddQuad(Position, new(Size), new(byte.MaxValue, byte.MaxValue, byte.MaxValue));
+            DiscWindow.Instance.ScoreText.Text = "Score: " + Score.ToString();
+            ((QuadBatchRenderer)sender).AddQuad(Vertices);
         }
     }
 }

@@ -1,55 +1,37 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net7.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Title>DISCout</Title>
-    <Product>DISCout</Product>
-    <PlatformTarget>x64</PlatformTarget>
-    <SignAssembly>False</SignAssembly>
-    <NeutralLanguage>en-GB</NeutralLanguage>
-    <Platforms>AnyCPU;x64</Platforms>
-    <AssemblyName>DISCout</AssemblyName>
-    <StartupObject>SquareSmash.ProgramMain</StartupObject>
+    <!--#if (UseCompiledBindings) -->
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <!--#endif -->
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <Deterministic>True</Deterministic>
-    <DebugType>full</DebugType>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <Deterministic>True</Deterministic>
-    <DebugType>full</DebugType>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <Deterministic>True</Deterministic>
-    <DebugType>full</DebugType>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <Deterministic>True</Deterministic>
-    <DebugType>full</DebugType>
-  </PropertyGroup>
+  <!--#if (AvaloniaStableChosen) -->
+  <ItemGroup>
+    <Folder Include="Audio\" />
+    <Folder Include="renderer\Windows\Controls\" />
+    <ProjectCapability Include="Avalonia" />
+  </ItemGroup>
+  <!--#endif -->
 
   <ItemGroup>
-    <Compile Remove="packages\**" />
-    <EmbeddedResource Remove="packages\**" />
-    <None Remove="packages\**" />
+    <PackageReference Include="NAudio" Version="2.1.0" />
+    <PackageReference Include="OpenTK.Mathematics" Version="4.7.7" />
+    <PackageReference Include="StbImageSharp" Version="2.27.13" PrivateAssets="all" />
+    <PackageReference Include="Avalonia" Version="0.10.21" />
+    <PackageReference Include="Avalonia.Desktop" Version="0.10.21" />
+    <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
+    <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="0.10.21" />
+    <!--#if (AvaloniaStableChosen) -->
+    <PackageReference Include="XamlNameReferenceGenerator" Version="1.6.1" />
+    <!--#endif -->
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="ImGui.NET" Version="1.89.5" />
-    <PackageReference Include="OpenTK" Version="4.7.7" />
-    <PackageReference Include="StbImageSharp" Version="2.27.13" />
     <EmbeddedResource Include="assets\**" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Remove="assets\shaders\anti_ghost_fragment.glsl" />
   </ItemGroup>
 </Project>

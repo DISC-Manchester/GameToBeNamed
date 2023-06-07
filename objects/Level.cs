@@ -2,14 +2,17 @@
 using SquareSmash.objects.components;
 using SquareSmash.objects.components.bricks;
 using SquareSmash.objects.components.bricks.types;
-using SquareSmash.renderer;
+using SquareSmash.renderer.Windows;
 using SquareSmash.utils;
+using System;
+using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading.Tasks;
 
 namespace SquareSmash.objects
 {
-    internal class Level
+    public class Level
     {
         private int bricks_left;
         protected List<Brick> bricks = new();
@@ -65,20 +68,20 @@ namespace SquareSmash.objects
         {
             bricks.Add(MakeBrick(brick.Type, new(x, y), brick.Colour));
             bricks_left++;
-            x += Client.Instance.Size.X / 11.0f - 16;
-            if (x > Client.Instance.Size.X - 20)
+            x += 6f;
+            if (x > 39.5f)
             {
-                x = 16;
-                y += 12;
+                x = -39f;
+                y -= 6;
             }
         }
 
-        public Level(Client client, string json_level)
+        public Level(DiscWindow DiscWindow, string json_level)
         {
             LevelData data = JsonSerializer.Deserialize<LevelData>(AssetUtil.ReadEmbeddedFile(json_level));
-            ball = new(client.Paddle, data.BaseBallSpeed);
-            float x = 16;
-            float y = 120;
+            ball = new(DiscWindow.Paddle, data.BaseBallSpeed);
+            float x = -39f;
+            float y = 100;
             foreach (BrickData brick in data.Bricks)
             {
                 if (brick.Loop == 0)
@@ -96,9 +99,9 @@ namespace SquareSmash.objects
         {
             foreach (Brick brick in bricks)
                 brick.OnRendering(sender);
-            Client.Instance.Renderer.Flush();
+            DiscWindow.Instance.GLRenderer.Flush();
             ball.OnRendering(sender);
-            Client.Instance.Renderer.FlushAntiGhost();
+            DiscWindow.Instance.GLRenderer.FlushAntiGhost();
         }
 
         private bool send = false;
@@ -107,13 +110,13 @@ namespace SquareSmash.objects
             if (bricks_left <= 0)
             {
                 if (!send)
-                    ((Client)sender).LevelWon();
+                    ((DiscWindow)sender).LevelWon();
                 send = true;
                 return;
             }
             foreach (Brick brick in bricks)
                 brick.OnUpdate();
-            ball.OnUpdate(new Tuple<Level, Client>(this, (Client)sender), DeltaTime);
+            ball.OnUpdate(new Tuple<Level, DiscWindow>(this, (DiscWindow)sender), DeltaTime);
         }
     }
 }

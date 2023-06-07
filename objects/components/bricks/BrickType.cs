@@ -1,6 +1,6 @@
 ﻿namespace SquareSmash.objects.components.bricks
 {
-    internal enum BrickType
+    public enum BrickType
     {
         AIR,
         NORMAL,

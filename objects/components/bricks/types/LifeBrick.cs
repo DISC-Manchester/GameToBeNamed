@@ -1,8 +1,9 @@
 ﻿using OpenTK.Mathematics;
+using System;
 
 namespace SquareSmash.objects.components.bricks.types
 {
-    internal class LifeBrick : Brick
+    public class LifeBrick : Brick
     {
         private int wait = 0;
         public LifeBrick(Vector2 position, Level level) : base(position, new(byte.MaxValue, byte.MaxValue, byte.MaxValue), level)
@@ -19,7 +20,7 @@ namespace SquareSmash.objects.components.bricks.types
                 return;
             }
             wait = 0;
-            Colour = new(Random.Shared.NextSingle(), Random.Shared.NextSingle(), Random.Shared.NextSingle());
+            UpdateColour(new(Random.Shared.NextSingle(), Random.Shared.NextSingle(), Random.Shared.NextSingle()));
         }
     }
 }
