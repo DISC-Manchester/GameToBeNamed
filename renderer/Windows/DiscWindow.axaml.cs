@@ -1,18 +1,17 @@
 ﻿using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
+using Avalonia.Input;
+using Avalonia.Media;
+using Avalonia.Threading;
+using NAudio.Wave;
+using SquareSmash.objects;
 using SquareSmash.objects.components;
 using SquareSmash.objects.score;
-using SquareSmash.objects;
-using System.Diagnostics;
-using SquareSmash.renderer.Windows.Controls;
-using Avalonia.Media;
-using Avalonia;
-using System;
-using System.Threading;
-using Avalonia.Input;
-using System.ComponentModel;
-using NAudio.Wave;
 using SquareSmash.utils;
-using Avalonia.Threading;
+using System;
+using System.ComponentModel;
+using System.Diagnostics;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace SquareSmash.renderer.Windows
@@ -49,7 +48,6 @@ namespace SquareSmash.renderer.Windows
         {
             while (!Instance.Cancellation.IsCancellationRequested)
             {
-                //Instance.pauseEvent.WaitOne();
                 float DeltaTime = (float)Instance.stopwatch.Elapsed.TotalMilliseconds;
                 Instance.stopwatch.Restart();
                 var t = Task.Run(() => Instance.Level.OnUpdate(this, DeltaTime));
@@ -66,7 +64,6 @@ namespace SquareSmash.renderer.Windows
             Paddle = new();
             Level = new(this, "assets.levels.level_1.json");
             ScoreBoard = ScoreBoard.Load();
-            Console.WriteLine(ScoreBoard.ToString());
             stopwatch.Start();
             musicPlayer.Init(new Mp3FileReader(AssetUtil.OpenEmbeddedFile("assets.sounds.music.mp3")));
             UpdateThread = new Thread(() => { Instance.Update(); });
@@ -101,7 +98,9 @@ namespace SquareSmash.renderer.Windows
             else
             {
                 if (!Level.GetBall().IsAlive())
-                    DisplayText.Text = "Press Space To Start";
+                {
+                    DisplayText.Text = "Press Space To Start!\n " + ScoreBoard.ToString();
+                }
                 else
                     DisplayText.Text = "";
             }
@@ -109,15 +108,23 @@ namespace SquareSmash.renderer.Windows
             {
                 Paddle.ResetPaddle();
                 LastScore = Level.GetBall().GetScore();
-                /*if (LastScore > ScoreBoard.entry[0].Score)
+                if (LastScore > ScoreBoard.entry[0].Score)
                 {
-                    ShowDialog();
-                }*/
+                    Action<int,string> callback = FinishNewUser;
+                    var popupWindow = new PopUpWindow(LastScore,callback);
+                    var task = popupWindow.ShowDialog(this);
+                }
                 GameRestart = true;
             }
             GLView.Render(context);
             base.Render(context);
             Dispatcher.UIThread.Post(InvalidateVisual, DispatcherPriority.Render);
+        }
+
+        protected void FinishNewUser(int LastScoreData,string UserNameData)
+        {
+            ScoreBoard.addScore(new(UserNameData, LastScoreData));
+            ScoreBoard.Save(ScoreBoard);
         }
 
 

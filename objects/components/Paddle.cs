@@ -39,6 +39,7 @@ namespace SquareSmash.objects.components
         {
             Position.X += Velocity.X * DeltaTime;
             Velocity.X = 0;
+            Position.X = MathHelper.Clamp(Position.X, -15, 15);
             Vertices = QuadBatchRenderer.PreMakeQuad(Position, new(0.3f, 0.03f), new(157, 6, 241));
         }
 

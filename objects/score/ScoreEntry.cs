@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SquareSmash.objects.score
 {
@@ -21,7 +17,7 @@ namespace SquareSmash.objects.score
 
         public override string? ToString()
         {
-            return $"ScoreEntry(UserName:{UserName},\n\t\tScore:{Score})";
+            return UserName == string.Empty ? string.Empty : $"{UserName} - Score:{Score}";
         }
     }
 }

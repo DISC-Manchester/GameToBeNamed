@@ -19,22 +19,12 @@ namespace SquareSmash.objects.score
             entry[0] = new_entry;
         }
 
-        public void OnRendering(object sender)
-        {
-            /*bool temp = false;
-            ImGui.Begin("ScoreBoard", ref temp, ImGuiWindowFlags.None);
-            ImGui.SetWindowFontScale(3.0f);
-            ImGui.Text("Press Space To Start");
-            ImGui.End();*/
-        }
-
         public override string? ToString()
         {
             StringBuilder builder = new();
-            builder.Append("ScoreBoard([\n");
-            foreach (ScoreEntry e in entry) 
-                builder.Append("\t" + e.ToString() + ",\n");
-            builder.Append("])");
+            builder.Append("Current ScoreBoard:\n");
+            foreach (ScoreEntry e in entry)
+                builder.Append("    " + e.ToString() + "\n");
             return builder.ToString();
         }
 
@@ -48,7 +38,7 @@ namespace SquareSmash.objects.score
                     bf.Serialize(file, obj);
                 }
             }
-            catch(Exception)
+            catch (Exception)
             {
                 return;
             }
@@ -59,12 +49,12 @@ namespace SquareSmash.objects.score
             try
             {
                 XmlSerializer bf = new(typeof(ScoreBoard));
-                using (Stream file = AssetUtil.OpenFile("ScoreBoard.xml",false)!)
+                using (Stream file = AssetUtil.OpenFile("ScoreBoard.xml", false)!)
                 {
                     return (ScoreBoard)bf.Deserialize(file)!;
                 }
             }
-            catch(Exception) 
+            catch (Exception)
             {
                 ScoreBoard obj = new ScoreBoard();
                 obj.addScore(new());

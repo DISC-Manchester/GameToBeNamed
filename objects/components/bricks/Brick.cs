@@ -25,9 +25,9 @@ namespace SquareSmash.objects.components.bricks
         }
         public bool IsActive() => is_active;
 
-        protected void UpdateColour(Colour3 colour) 
+        protected void UpdateColour(Colour3 colour)
         {
-            for(int i = 0; i < Vertices.Length; i++)
+            for (int i = 0; i < Vertices.Length; i++)
                 Vertices[i].Color = colour;
         }
         public void OnRendering(object sender)

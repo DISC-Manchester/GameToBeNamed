@@ -23,7 +23,7 @@ public partial class Program : Application
         base.OnFrameworkInitializationCompleted();
     }
 
-    
+
 }
 
 public static class Entry

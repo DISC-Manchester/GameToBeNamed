@@ -1,6 +1,4 @@
-﻿using Avalonia.Controls;
-using Avalonia.Input;
-using Avalonia.Threading;
+﻿using Avalonia.Input;
 using NAudio.Wave;
 using OpenTK.Mathematics;
 using SquareSmash.objects.components.bricks;

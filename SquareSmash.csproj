@@ -7,12 +7,18 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <!--#if (UseCompiledBindings) -->
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <StartupObject></StartupObject>
     <!--#endif -->
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <NoWarn>0108</NoWarn>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <NoWarn>0108</NoWarn>
   </PropertyGroup>
 
   <!--#if (AvaloniaStableChosen) -->
   <ItemGroup>
-    <Folder Include="Audio\" />
     <Folder Include="renderer\Windows\Controls\" />
     <ProjectCapability Include="Avalonia" />
   </ItemGroup>
@@ -33,5 +39,11 @@
 
   <ItemGroup>
     <EmbeddedResource Include="assets\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="renderer\Windows\PopUpWindow.axaml.cs">
+      <DependentUpon>PopUpWindow.axaml</DependentUpon>
+    </Compile>
   </ItemGroup>
 </Project>

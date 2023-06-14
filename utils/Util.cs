@@ -24,31 +24,25 @@ namespace SquareSmash.utils
 
         public static string ReadEmbeddedFile(string path)
         {
-            Stream? stream = exe_base.GetManifestResourceStream("SquareSmash." + path);
-            if (stream == null)
-                throw new FieldAccessException("could not find embedded file:" + path);
+            Stream? stream = exe_base.GetManifestResourceStream("SquareSmash." + path) ?? throw new FieldAccessException("could not find embedded file:" + path);
             stream.Position = 0;
-            using (StreamReader reader = new StreamReader(stream, Encoding.UTF8))
-            {
-                return reader.ReadToEnd();
-            }
+            using StreamReader reader = new(stream, Encoding.UTF8);
+            return reader.ReadToEnd();
         }
 
 
         public static Stream OpenEmbeddedFile(string path)
         {
-            Stream? stream = exe_base.GetManifestResourceStream("SquareSmash." + path);
-            if (stream == null)
-                throw new FieldAccessException("could not find embedded file:" + path);
+            Stream? stream = exe_base.GetManifestResourceStream("SquareSmash." + path) ?? throw new FieldAccessException("could not find embedded file:" + path);
             stream.Position = 0;
             return stream;
         }
 
-        public static Stream OpenFile(string path,bool create = true)
+        public static Stream OpenFile(string path, bool create = true)
         {
-                Stream  stream = File.Open(Path.GetDirectoryName(exe_base.Location) + '/' + path, create ? FileMode.OpenOrCreate: FileMode.Open)!;
-                stream.Position = 0;
-                return stream;
+            Stream stream = File.Open(Path.GetDirectoryName(exe_base.Location) + '/' + path, create ? FileMode.OpenOrCreate : FileMode.Open)!;
+            stream.Position = 0;
+            return stream;
         }
 
     }

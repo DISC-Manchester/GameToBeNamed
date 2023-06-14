@@ -1,6 +1,5 @@
 using Avalonia.OpenGL;
 using OpenTK.Mathematics;
-using SkiaSharp;
 using SquareSmash.utils;
 using StbImageSharp;
 using System;
@@ -12,8 +11,8 @@ namespace SquareSmash.renderer
 {
     public sealed class QuadBatchRenderer : IDisposable
     {
-        private GlInterface GL;
-        private GlExtrasInterface GLE;
+        private readonly GlInterface GL;
+        private readonly GlExtrasInterface GLE;
         private readonly int vbo;
         private readonly int vao;
         private readonly int sid;
@@ -137,7 +136,7 @@ namespace SquareSmash.renderer
             return quad;
         }
 
-        public void  AddQuad(Vertex[] Vertices) 
+        public void AddQuad(Vertex[] Vertices)
             => quadVertices.AddRange(Vertices);
 
         public Vertex[] AddQuad(Vector2 position, Vector2 size, Colour3 color)
