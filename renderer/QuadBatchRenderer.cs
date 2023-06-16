@@ -1,3 +1,4 @@
+
 using Avalonia.OpenGL;
 using OpenTK.Mathematics;
 using SquareSmash.utils;
@@ -89,6 +90,8 @@ namespace SquareSmash.renderer
             GLE.BindVertexArray(0);
         }
 
+        // pre calculate the vertex so that we don't need to spent cpu cycles at rime-time to calculate the vertex
+        // the can be compliantly expensive 
         public static Vertex[] PreMakeQuad(Vector2 position, Vector2 size, Colour3 color)
         {
             var quad = new Vertex[6]; // Use 6 vertices for a quad triangle strip
@@ -97,6 +100,14 @@ namespace SquareSmash.renderer
             Matrix4 modelTransform = Matrix4.Identity;
             modelTransform *= Matrix4.CreateTranslation(new Vector3(position.X, position.Y, -1.0f));
             modelTransform *= Matrix4.CreateScale(new Vector3(size.X, size.Y, 1.0f));
+
+            /*  Idea of how vertex are laded out 
+             *  0,0-------------------------------------0,1
+             *     |   ~                                                  |
+             *     |                        ~                             |
+             *     |                                                ~     |
+             *    1,0-------------------------------------1,1
+             */
 
             Vector4 transform_0 = (new Vector4(-1.0f, -1.0f, -1.0f, 1.0f) * projectionMatrix * viewMatrix * modelTransform);
             Vector3 scale_down_0 = new Vector3(transform_0.X, transform_0.Y, transform_0.Z) / transform_0.Z;

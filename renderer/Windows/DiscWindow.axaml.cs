@@ -67,7 +67,7 @@ namespace SquareSmash.renderer.Windows
             musicPlayer.Init(new Mp3FileReader(AssetUtil.OpenEmbeddedFile("assets.sounds.music.mp3")));
             UpdateThread = new Thread(() => { Instance.Update(); });
             UpdateThread.Start();
-            musicPlayer.Play();
+            //musicPlayer.Play();
         }
 
         private void OnKeyDown(object sender, KeyEventArgs e)
