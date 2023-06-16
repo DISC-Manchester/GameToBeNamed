@@ -1,5 +1,7 @@
 ﻿using Avalonia.Controls;
 using Avalonia.Interactivity;
+using NAudio.Wave;
+using SquareSmash.utils;
 using System;
 
 namespace SquareSmash.renderer.Windows
@@ -8,6 +10,13 @@ namespace SquareSmash.renderer.Windows
     {
         private readonly Action<int, string> Callback;
         private readonly int Score;
+
+        private void Play()
+        {
+            WaveOutEvent beepPlayer = new();
+            beepPlayer.Init(new WaveFileReader(AssetUtil.OpenEmbeddedFile("assets.sounds.click.wav")));
+            beepPlayer.Play();
+        }
 
         public PopUpWindow()
         {
@@ -25,6 +34,7 @@ namespace SquareSmash.renderer.Windows
 
         private void OnButtonClick(object sender, RoutedEventArgs e)
         {
+            Play();
             if (TextInput.Text.Length >= 1 && TextInput.Text.Length <= 10)
             {
                 Callback.Invoke(Score, TextInput.Text);

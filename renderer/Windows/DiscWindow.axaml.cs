@@ -1,5 +1,4 @@
 ﻿using Avalonia.Controls;
-using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Media;
 using Avalonia.Threading;
@@ -110,8 +109,8 @@ namespace SquareSmash.renderer.Windows
                 LastScore = Level.GetBall().GetScore();
                 if (LastScore > ScoreBoard.entry[0].Score)
                 {
-                    Action<int,string> callback = FinishNewUser;
-                    var popupWindow = new PopUpWindow(LastScore,callback);
+                    Action<int, string> callback = FinishNewUser;
+                    var popupWindow = new PopUpWindow(LastScore, callback);
                     var task = popupWindow.ShowDialog(this);
                 }
                 GameRestart = true;
@@ -121,7 +120,7 @@ namespace SquareSmash.renderer.Windows
             Dispatcher.UIThread.Post(InvalidateVisual, DispatcherPriority.Render);
         }
 
-        protected void FinishNewUser(int LastScoreData,string UserNameData)
+        protected void FinishNewUser(int LastScoreData, string UserNameData)
         {
             ScoreBoard.addScore(new(UserNameData, LastScoreData));
             ScoreBoard.Save(ScoreBoard);

@@ -42,6 +42,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="assets\sounds\click.wav" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Update="renderer\Windows\PopUpWindow.axaml.cs">
       <DependentUpon>PopUpWindow.axaml</DependentUpon>
     </Compile>
