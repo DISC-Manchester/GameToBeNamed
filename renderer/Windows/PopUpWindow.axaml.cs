@@ -23,6 +23,7 @@ namespace SquareSmash.renderer.Windows
             Score = 0;
             Callback = (int n, string s) => { };
             InitializeComponent();
+            TextInput.Text = "";
         }
 
         public PopUpWindow(int score, Action<int, string> callback)
@@ -30,6 +31,7 @@ namespace SquareSmash.renderer.Windows
             Callback = callback;
             Score = score;
             InitializeComponent();
+            TextInput.Text = "";
         }
 
         private void OnButtonClick(object sender, RoutedEventArgs e)

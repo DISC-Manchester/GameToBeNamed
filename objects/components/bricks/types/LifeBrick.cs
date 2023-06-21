@@ -6,7 +6,7 @@ namespace SquareSmash.objects.components.bricks.types
     public class LifeBrick : Brick
     {
         private int wait = 0;
-        public LifeBrick(Vector2 position, Level level) : base(position, new(byte.MaxValue, byte.MaxValue, byte.MaxValue), level)
+        public LifeBrick(Vector2 position, Level level) : base(position, 0.0f, level)
         {
         }
 
@@ -20,7 +20,8 @@ namespace SquareSmash.objects.components.bricks.types
                 return;
             }
             wait = 0;
-            UpdateColour(new(Random.Shared.NextSingle(), Random.Shared.NextSingle(), Random.Shared.NextSingle()));
+           
+            UpdateColour(Random.Shared.NextSingle() * 10 % 5);
         }
     }
 }

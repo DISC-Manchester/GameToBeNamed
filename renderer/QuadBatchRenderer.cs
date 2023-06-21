@@ -20,9 +20,8 @@ namespace SquareSmash.renderer
         private readonly int sid_anti_ghost;
         private readonly int sid_plain;
         private readonly int tex_id;
+        private readonly int vsize = 5 * sizeof(float);
         private readonly List<Vertex> quadVertices;
-        public static readonly Matrix4 projectionMatrix = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(45f), 0.85915492957f, 0.1f, 100f);
-        public static readonly Matrix4 viewMatrix = Matrix4.LookAt(new Vector3(0.0f, 0.0f, 5.0f), Vector3.Zero, Vector3.UnitY);
 
         private static unsafe int CreateTexture(GlInterface GL, GlExtrasInterface EGL, string path)
         {
@@ -81,165 +80,44 @@ namespace SquareSmash.renderer
             vao = vaos[0];
             GLE.BindVertexArray(vao);
             GL.BindBuffer(GL_ARRAY_BUFFER, vbo);
+            GL.VertexAttribPointer(0, 2, GL_FLOAT, 0, vsize, 0);
             GL.EnableVertexAttribArray(0);
-            GL.VertexAttribPointer(0, 2, GL_FLOAT, 0, 7 * sizeof(float), 0);
+            GL.VertexAttribPointer(1, 1, GL_FLOAT, 0, vsize, 2 * sizeof(float));
             GL.EnableVertexAttribArray(1);
-            GL.VertexAttribPointer(1, 3, GL_FLOAT, 0, 7 * sizeof(float), 2 * sizeof(float));
+            GL.VertexAttribPointer(2, 2, GL_FLOAT, 0, vsize, 3 * sizeof(float));
             GL.EnableVertexAttribArray(2);
-            GL.VertexAttribPointer(2, 2, GL_FLOAT, 0, 7 * sizeof(float), 5 * sizeof(float));
             GLE.BindVertexArray(0);
-        }
-
-        // pre calculate the vertex so that we don't need to spent cpu cycles at rime-time to calculate the vertex
-        // the can be compliantly expensive 
-        public static Vertex[] PreMakeQuad(Vector2 position, Vector2 size, Colour3 color)
-        {
-            var quad = new Vertex[6]; // Use 6 vertices for a quad triangle strip
-
-            // Apply model transformation
-            Matrix4 modelTransform = Matrix4.Identity;
-            modelTransform *= Matrix4.CreateTranslation(new Vector3(position.X, position.Y, -1.0f));
-            modelTransform *= Matrix4.CreateScale(new Vector3(size.X, size.Y, 1.0f));
-
-            /*  Idea of how vertex are laded out 
-             *  0,0-------------------------------------0,1
-             *     |   ~                                                  |
-             *     |                        ~                             |
-             *     |                                                ~     |
-             *    1,0-------------------------------------1,1
-             */
-
-            Vector4 transform_0 = (new Vector4(-1.0f, -1.0f, -1.0f, 1.0f) * projectionMatrix * viewMatrix * modelTransform);
-            Vector3 scale_down_0 = new Vector3(transform_0.X, transform_0.Y, transform_0.Z) / transform_0.Z;
-            quad[0].Position = scale_down_0.Xy;
-            quad[0].Color = color;
-            quad[0].Uvs = new Vector2(0.0f, 0.0f);
-
-            Vector4 transform_1 = (new Vector4(1.0f, -1.0f, -1.0f, 1.0f) * projectionMatrix * viewMatrix * modelTransform);
-            Vector3 scale_down_1 = new Vector3(transform_1.X, transform_1.Y, transform_1.Z) / transform_1.Z;
-            quad[1].Position = scale_down_1.Xy;
-            quad[1].Color = color;
-            quad[1].Uvs = new Vector2(1.0f, 0.0f);
-
-            Vector4 transform_2 = (new Vector4(-1.0f, 1.0f, -1.0f, 1.0f) * projectionMatrix * viewMatrix * modelTransform);
-            Vector3 scale_down_2 = new Vector3(transform_2.X, transform_2.Y, transform_2.Z) / transform_2.Z;
-            quad[2].Position = scale_down_2.Xy;
-            quad[2].Color = color;
-            quad[2].Uvs = new Vector2(0.0f, 1.0f);
-
-            Vector4 transform_3 = (new Vector4(1.0f, 1.0f, -1.0f, 1.0f) * projectionMatrix * viewMatrix * modelTransform);
-            Vector3 scale_down_3 = new Vector3(transform_3.X, transform_3.Y, transform_3.Z) / transform_3.Z;
-            quad[3].Position = scale_down_3.Xy;
-            quad[3].Color = color;
-            quad[3].Uvs = new Vector2(1.0f, 1.0f);
-
-            Vector4 transform_4 = (new Vector4(-1.0f, 1.0f, -1.0f, 1.0f) * projectionMatrix * viewMatrix * modelTransform);
-            Vector3 scale_down_4 = new Vector3(transform_4.X, transform_4.Y, transform_4.Z) / transform_4.Z;
-            quad[4].Position = scale_down_4.Xy;
-            quad[4].Color = color;
-            quad[4].Uvs = new Vector2(0.0f, 1.0f);
-
-            Vector4 transform_5 = (new Vector4(1.0f, -1.0f, -1.0f, 1.0f) * projectionMatrix * viewMatrix * modelTransform);
-            Vector3 scale_down_5 = new Vector3(transform_5.X, transform_5.Y, transform_5.Z) / transform_5.Z;
-            quad[5].Position = scale_down_5.Xy;
-            quad[5].Color = color;
-            quad[5].Uvs = new Vector2(1.0f, 0.0f);
-            return quad;
         }
 
         public void AddQuad(Vertex[] Vertices)
             => quadVertices.AddRange(Vertices);
 
-        public Vertex[] AddQuad(Vector2 position, Vector2 size, Colour3 color)
+        public Vertex[] AddQuad(Vector2 position, Vector2 size, float color)
         {
-            var quad = new Vertex[6]; // Use 6 vertices for a quad triangle strip
-
-            // Apply model transformation
-            Matrix4 modelTransform = Matrix4.Identity;
-            modelTransform *= Matrix4.CreateTranslation(new Vector3(position.X, position.Y, -1.0f));
-            modelTransform *= Matrix4.CreateScale(new Vector3(size.X, size.Y, 1.0f));
-
-            Vector4 transform_0 = (new Vector4(-1.0f, -1.0f, -1.0f, 1.0f) * projectionMatrix * viewMatrix * modelTransform);
-            Vector3 scale_down_0 = new Vector3(transform_0.X, transform_0.Y, transform_0.Z) / transform_0.Z;
-            quad[0].Position = scale_down_0.Xy;
-            quad[0].Color = color;
-            quad[0].Uvs = new Vector2(0.0f, 0.0f);
-
-            Vector4 transform_1 = (new Vector4(1.0f, -1.0f, -1.0f, 1.0f) * projectionMatrix * viewMatrix * modelTransform);
-            Vector3 scale_down_1 = new Vector3(transform_1.X, transform_1.Y, transform_1.Z) / transform_1.Z;
-            quad[1].Position = scale_down_1.Xy;
-            quad[1].Color = color;
-            quad[1].Uvs = new Vector2(1.0f, 0.0f);
-
-            Vector4 transform_2 = (new Vector4(-1.0f, 1.0f, -1.0f, 1.0f) * projectionMatrix * viewMatrix * modelTransform);
-            Vector3 scale_down_2 = new Vector3(transform_2.X, transform_2.Y, transform_2.Z) / transform_2.Z;
-            quad[2].Position = scale_down_2.Xy;
-            quad[2].Color = color;
-            quad[2].Uvs = new Vector2(0.0f, 1.0f);
-
-            Vector4 transform_3 = (new Vector4(1.0f, 1.0f, -1.0f, 1.0f) * projectionMatrix * viewMatrix * modelTransform);
-            Vector3 scale_down_3 = new Vector3(transform_3.X, transform_3.Y, transform_3.Z) / transform_3.Z;
-            quad[3].Position = scale_down_3.Xy;
-            quad[3].Color = color;
-            quad[3].Uvs = new Vector2(1.0f, 1.0f);
-
-            Vector4 transform_4 = (new Vector4(-1.0f, 1.0f, -1.0f, 1.0f) * projectionMatrix * viewMatrix * modelTransform);
-            Vector3 scale_down_4 = new Vector3(transform_4.X, transform_4.Y, transform_4.Z) / transform_4.Z;
-            quad[4].Position = scale_down_4.Xy;
-            quad[4].Color = color;
-            quad[4].Uvs = new Vector2(0.0f, 1.0f);
-
-            Vector4 transform_5 = (new Vector4(1.0f, -1.0f, -1.0f, 1.0f) * projectionMatrix * viewMatrix * modelTransform);
-            Vector3 scale_down_5 = new Vector3(transform_5.X, transform_5.Y, transform_5.Z) / transform_5.Z;
-            quad[5].Position = scale_down_5.Xy;
-            quad[5].Color = color;
-            quad[5].Uvs = new Vector2(1.0f, 0.0f);
-
+            var quad = VertexUtils.PreMakeQuad(position, size, color);
             quadVertices.AddRange(quad);
             return quad;
         }
 
-        public unsafe void Flush()
+        public unsafe void ShaderFlush(int id)
         {
             if (quadVertices.Count == 0)
                 return;
             GLE.BindVertexArray(vao);
             fixed (void* pdata = quadVertices.ToArray())
-                GL.BufferData(GL_ARRAY_BUFFER, quadVertices.Count * 7 * sizeof(float), new IntPtr(pdata), GL_DYNAMIC_DRAW);
+                GL.BufferData(GL_ARRAY_BUFFER, quadVertices.Count * vsize, new IntPtr(pdata), GL_DYNAMIC_DRAW);
 
             GL.BindTexture(GL_TEXTURE_2D, tex_id);
-            GL.UseProgram(sid);
+            GL.UseProgram(id);
             GL.DrawArrays(GL_TRIANGLES, 0, quadVertices.Count);
             GLE.BindVertexArray(0);
             quadVertices.Clear();
         }
 
-        public unsafe void FlushAntiGhost()
-        {
-            if (quadVertices.Count == 0)
-                return;
-            GLE.BindVertexArray(vao);
-            fixed (void* pdata = quadVertices.ToArray())
-                GL.BufferData(GL_ARRAY_BUFFER, quadVertices.Count * 7 * sizeof(float), new IntPtr(pdata), GL_DYNAMIC_DRAW);
-            GL.BindTexture(GL_TEXTURE_2D, tex_id);
-            GL.UseProgram(sid_anti_ghost);
-            GL.DrawArrays(GL_TRIANGLES, 0, quadVertices.Count);
-            GLE.BindVertexArray(0);
-            quadVertices.Clear();
-        }
 
-        public unsafe void FlushPlain()
-        {
-            if (quadVertices.Count == 0)
-                return;
-            GLE.BindVertexArray(vao);
-            fixed (void* pdata = quadVertices.ToArray())
-                GL.BufferData(GL_ARRAY_BUFFER, quadVertices.Count * 7 * sizeof(float), new IntPtr(pdata), GL_DYNAMIC_DRAW);
-            GL.UseProgram(sid_plain);
-            GL.DrawArrays(GL_TRIANGLES, 0, quadVertices.Count);
-            GLE.BindVertexArray(0);
-            quadVertices.Clear();
-        }
+        public unsafe void Flush() => ShaderFlush(sid);
+        public unsafe void FlushAntiGhost() => ShaderFlush(sid_anti_ghost);
+        public unsafe void FlushPlain() => ShaderFlush(sid_plain);
 
         public void Dispose()
         {

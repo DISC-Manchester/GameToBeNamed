@@ -46,12 +46,12 @@ namespace SquareSmash.objects
 
         private Brick MakeBrick(BrickType type, Vector2 position, string colour_str)
         {
-            Colour3 colour = (BrickDataColour)Enum.Parse(typeof(BrickDataColour), colour_str) switch
+            uint colour = (BrickDataColour)Enum.Parse(typeof(BrickDataColour), colour_str) switch
             {
-                BrickDataColour.DiscPink => new(251, 0, 250),
-                BrickDataColour.DiscBlue => new(0, 192, 237),
-                BrickDataColour.DiscOrange => new(249, 185, 0),
-                BrickDataColour.DiscGreen => new(0, 238, 0),
+                BrickDataColour.DiscPink => 3,
+                BrickDataColour.DiscBlue => 4,
+                BrickDataColour.DiscOrange => 5,
+                BrickDataColour.DiscGreen => 6,
                 _ => throw new ArgumentException("a colour provided in the level is not one implemented in the gmae"),
             };
             return type switch
@@ -75,10 +75,10 @@ namespace SquareSmash.objects
             }
         }
 
-        public Level(DiscWindow DiscWindow, string json_level)
+        public Level(string json_level)
         {
             LevelData data = JsonSerializer.Deserialize<LevelData>(AssetUtil.ReadEmbeddedFile(json_level));
-            ball = new(DiscWindow.Paddle, data.BaseBallSpeed);
+            ball = new(DiscWindow.Instance.Paddle, data.BaseBallSpeed);
             float x = -39f;
             float y = 100;
             foreach (BrickData brick in data.Bricks)
@@ -104,18 +104,18 @@ namespace SquareSmash.objects
         }
 
         private bool send = false;
-        public void OnUpdate(object sender, float DeltaTime)
+        public void OnUpdate(float DeltaTime)
         {
             if (bricks_left <= 0)
             {
                 if (!send)
-                    ((DiscWindow)sender).LevelWon();
+                    DiscWindow.Instance.LevelWon();
                 send = true;
                 return;
             }
             foreach (Brick brick in bricks)
                 brick.OnUpdate();
-            ball.OnUpdate(new Tuple<Level, DiscWindow>(this, (DiscWindow)sender), DeltaTime);
+            ball.OnUpdate(this, DeltaTime);
         }
     }
 }

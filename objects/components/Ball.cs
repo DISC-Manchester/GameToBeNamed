@@ -12,7 +12,7 @@ namespace SquareSmash.objects.components
 {
     public class Ball
     {
-        private static readonly float Size = 0.03f;
+        private readonly Vector2 Size = new(0.03f, 0.03f);
         private int LastScore = 0;
         public int Score { get; set; }
         private Vector2 Position;
@@ -28,6 +28,7 @@ namespace SquareSmash.objects.components
             Position = paddle.GetPosition();
             Position.X += 0;
             Position.Y -= 10;
+            Vertices = VertexUtils.PreMakeQuad(Vector2.Zero, Vector2.Zero, 0f);
         }
 
         public void ResetBall()
@@ -62,24 +63,22 @@ namespace SquareSmash.objects.components
             beepPlayer.Play();
         }
 
-        public void OnUpdate(object sender, float DeltaTime)
+        public void OnUpdate(Level level, float DeltaTime)
         {
-            Tuple<Level, DiscWindow> senders = (Tuple<Level, DiscWindow>)sender;
             if (Released is false)
             {
-                Position = senders.Item2.Paddle.GetPosition();
+                Position = DiscWindow.Instance.Paddle.GetPosition();
                 Position.X *= 10;
                 Position.Y += 5;
-                Vertices = Task.Run(() => QuadBatchRenderer.PreMakeQuad(Position, new(Size, Size), new(byte.MaxValue, byte.MaxValue, byte.MaxValue))).Result;
+                VertexUtils.UpdateQuad(Position, Size, ref Vertices);
                 return;
             }
 
             Position += Velocity * DeltaTime;
-            Position = new(Math.Clamp(Position.X, -171, 171), Math.Clamp(Position.Y, -171, 171));
-            var task = Task.Run(() => QuadBatchRenderer.PreMakeQuad(Position, new(Size, Size), new(byte.MaxValue, byte.MaxValue, byte.MaxValue)));
-            //this is very inefficent but idk any other way
+            Position.X = Math.Clamp(Position.X, -171, 171);
+            Position.Y = Math.Clamp(Position.Y, -171, 171);
 
-            if (senders.Item2.Paddle.DoseFullIntersects(Vertices))
+            if (DiscWindow.Instance.Paddle.DoseFullIntersects(Vertices))
             {
                 _ = Task.Run(Play);
                 Velocity.Y = Math.Abs(Velocity.Y);
@@ -101,7 +100,7 @@ namespace SquareSmash.objects.components
             }
             else
             {
-                foreach (Brick brick in senders.Item1.GetBricks())
+                foreach (Brick brick in level.GetBricks())
                 {
                     if (brick.IsActive() && brick.DoseFullIntersects(Vertices))
                     {
@@ -113,7 +112,7 @@ namespace SquareSmash.objects.components
                             Speed *= 1.0000001f;
                             Score++;
                             if (brick.GetBrickType() == BrickType.LIFE)
-                                senders.Item2.Paddle.AddLife();
+                                DiscWindow.Instance.Paddle.AddLife();
                             Velocity.Y = -(Math.Abs(Velocity.Y) + Speed);
                         }
                         else
@@ -142,14 +141,14 @@ namespace SquareSmash.objects.components
             if (Velocity.Y == 0)
                 Velocity.Y += LaunchSpeed;
 
-            Vertices = task.Result;
+            VertexUtils.UpdateQuad(Position, Size, ref Vertices);
 
             if (Position.Y <= -170)
             {
                 ResetBall();
                 LastScore = Score;
                 Speed = LaunchSpeed;
-                senders.Item2.Paddle.ResetPaddle();
+                DiscWindow.Instance.Paddle.ResetPaddle();
             }
         }
         public void OnRendering(object sender)

@@ -7,7 +7,7 @@ namespace SquareSmash.renderer
     public struct Vertex
     {
         public Vector2 Position { get; set; }
-        public Colour3 Color { get; set; }
+        public float Color { get; set; }
         public Vector2 Uvs { get; set; }
     }
 

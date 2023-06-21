@@ -25,34 +25,15 @@ namespace SquareSmash.renderer.Windows
 
         public Paddle Paddle { get; private set; }
 
-        public float GLHeight
-        {
-            get => ((1.0f - ((float)Height / (float)Width)) * 2.0f) - 1.0f;
-        }
-
         private readonly Stopwatch stopwatch = new();
         public bool GameRestart { get; private set; } = false;
         private int CurrentLevel = 1;
         public Level Level { get; private set; }
 
-        protected readonly CancellationTokenSource Cancellation = new CancellationTokenSource();
-        private Thread UpdateThread;
         public ScoreBoard ScoreBoard { get; private set; }
         public QuadBatchRenderer GLRenderer
         {
             get => GLView.Renderer;
-        }
-
-        protected void Update()
-        {
-            while (!Instance.Cancellation.IsCancellationRequested)
-            {
-                float DeltaTime = (float)Instance.stopwatch.Elapsed.TotalMilliseconds;
-                Instance.stopwatch.Restart();
-                var t = Task.Run(() => Instance.Level.OnUpdate(this, DeltaTime));
-                Instance.Paddle.OnUpdate(DeltaTime);
-                t.Wait();
-            }
         }
 
         public DiscWindow()
@@ -61,13 +42,12 @@ namespace SquareSmash.renderer.Windows
             Instance = this;
             KeyDown += OnKeyDown!;
             Paddle = new();
-            Level = new(this, "assets.levels.level_1.json");
+            Level = new("assets.levels.level_1.json");
             ScoreBoard = ScoreBoard.Load();
             stopwatch.Start();
             musicPlayer.Init(new Mp3FileReader(AssetUtil.OpenEmbeddedFile("assets.sounds.music.mp3")));
-            UpdateThread = new Thread(() => { Instance.Update(); });
-            UpdateThread.Start();
             //musicPlayer.Play();
+            GC.Collect();
         }
 
         private void OnKeyDown(object sender, KeyEventArgs e)
@@ -78,7 +58,7 @@ namespace SquareSmash.renderer.Windows
                 {
                     GameRestart = false;
                     DisplayText.Text = "";
-                    Level = new(this, "assets.levels.level_" + Convert.ToString(CurrentLevel) + ".json");
+                    Level = new("assets.levels.level_" + Convert.ToString(CurrentLevel) + ".json");
                 }
                 else
                     return;
@@ -115,6 +95,10 @@ namespace SquareSmash.renderer.Windows
                 }
                 GameRestart = true;
             }
+            float DeltaTime = (float)Instance.stopwatch.Elapsed.TotalMilliseconds;
+            Instance.stopwatch.Restart();
+            Instance.Level.OnUpdate(DeltaTime);
+            Instance.Paddle.OnUpdate(DeltaTime);
             GLView.Render(context);
             base.Render(context);
             Dispatcher.UIThread.Post(InvalidateVisual, DispatcherPriority.Render);
@@ -130,8 +114,6 @@ namespace SquareSmash.renderer.Windows
 
         protected override void OnClosing(CancelEventArgs e)
         {
-            Cancellation.Cancel();
-            UpdateThread.Join();
             musicPlayer.Stop();
             musicPlayer.Dispose();
             stopwatch.Stop();
@@ -143,7 +125,7 @@ namespace SquareSmash.renderer.Windows
         public void LevelWon()
         {
             CurrentLevel++;
-            Level = new Level(this, "assets.levels.level_" + Convert.ToString(CurrentLevel) + ".json");
+            Level = new Level("assets.levels.level_" + Convert.ToString(CurrentLevel) + ".json");
         }
     }
 }

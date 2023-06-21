@@ -7,6 +7,7 @@ namespace SquareSmash.objects.components
 {
     public class Paddle
     {
+        private readonly Vector2 Size = new(0.3f, 0.03f);
         private Vertex[] Vertices = new Vertex[1];
         private Vector2 Position = new(1.0f, -150.0f);
         private Vector2 Velocity;
@@ -15,14 +16,18 @@ namespace SquareSmash.objects.components
         public bool IsDead() => Lives < 0;
         public void AddLife() => Lives++;
 
-        public Paddle() => ResetPaddle();
+        public Paddle()
+        {
+            Vertices = VertexUtils.PreMakeQuad( Vector2.Zero, Vector2.Zero, 1f);
+            ResetPaddle();
+        }
 
         public void ResetPaddle()
         {
             Lives -= IsDead() ? -3 : 1;
             Velocity = Vector2.Zero;
             Position = new(1.0f, -150.0f);
-            Vertices = QuadBatchRenderer.PreMakeQuad(Position, new(0.3f, 0.03f), new(157, 6, 241));
+            VertexUtils.UpdateQuad(Position, Size, ref Vertices);
         }
 
         public void OnKeyDown(object sender, KeyEventArgs e)
@@ -30,9 +35,9 @@ namespace SquareSmash.objects.components
             if (e.Key == Key.F1)
                 Lives = -1;
             if (e.Key == Key.A && Position.X < 14)
-                Velocity.X = 12f;
+                Velocity.X = 0.1f;
             else if (e.Key == Key.D && Position.X > -14)
-                Velocity.X = -12f;
+                Velocity.X = -0.1f;
         }
 
         public void OnUpdate(float DeltaTime)
@@ -40,7 +45,7 @@ namespace SquareSmash.objects.components
             Position.X += Velocity.X * DeltaTime;
             Velocity.X = 0;
             Position.X = MathHelper.Clamp(Position.X, -15, 15);
-            Vertices = QuadBatchRenderer.PreMakeQuad(Position, new(0.3f, 0.03f), new(157, 6, 241));
+            VertexUtils.UpdateQuad(Position, Size, ref Vertices);
         }
 
         public void OnRendering(object sender)
@@ -49,7 +54,7 @@ namespace SquareSmash.objects.components
             float x = -33;
             for (uint i = 0; i <= Lives; i++)
             {
-                ((QuadBatchRenderer)sender).AddQuad(new(x, 49f), new(0.1f, 0.1f), new(byte.MaxValue, 127, 80));
+                ((QuadBatchRenderer)sender).AddQuad(new(x, 49f), new(0.1f, 0.1f), 2u);
                 x -= 7f;
             }
             ((QuadBatchRenderer)sender).FlushAntiGhost();
