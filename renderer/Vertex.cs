@@ -23,8 +23,5 @@ namespace SquareSmash.renderer
             Max = (quad[0].Position + Vector2.One) * 1000 / 2;
             Max = new(MathF.Round(Max.X), MathF.Round(Max.Y));
         }
-
-        public override string? ToString()
-            => "AABB: {MIN:" + Min.ToString() + ",MAX:" + Max.ToString() + "}";
     }
 }
