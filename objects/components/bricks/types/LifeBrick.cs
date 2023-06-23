@@ -1,16 +1,21 @@
-﻿using OpenTK.Mathematics;
-using System;
+﻿using System;
 
 namespace SquareSmash.objects.components.bricks.types
 {
-    public class LifeBrick : Brick
+    public class LifeBrick : ChangeableBrick
     {
         private int wait = 0;
-        public LifeBrick(Vector2 position, Level level) : base(position, 0.0f, level)
+        public LifeBrick(float x, float y, Level level) : base(x, y, 0.0f, level)
         {
         }
 
         public override BrickType GetBrickType() => BrickType.LIFE;
+
+        public override void OnRendering(object sender)
+        {
+            OnUpdate();
+            base.OnRendering(sender);
+        }
 
         public override void OnUpdate()
         {
@@ -20,7 +25,7 @@ namespace SquareSmash.objects.components.bricks.types
                 return;
             }
             wait = 0;
-           
+
             UpdateColour(Random.Shared.NextSingle() * 10 % 5);
         }
     }

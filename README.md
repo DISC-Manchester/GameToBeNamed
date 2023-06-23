@@ -6,9 +6,6 @@
   - **Enter** - game restart after death
   - **A** - move left
   - **D** - move right
- 
- **DEBUG:**
-  - **f1** - instant death
 
 ## Setup Instructions
 

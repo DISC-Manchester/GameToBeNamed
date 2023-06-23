@@ -17,63 +17,55 @@ namespace SquareSmash.renderer.Windows
 {
     public partial class DiscWindow : Window
     {
-        private static readonly WaveOutEvent musicPlayer = new();
-        private int LastScore = 0;
+        private static readonly WaveOutEvent MusicPlayer = new();
+        private readonly Stopwatch stopwatch = new();
+        private readonly ScoreBoard ScoreBoard;
+        private int CurrentLevel = 1;
+        private bool GameRestart = false;
+
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         public static DiscWindow Instance { get; set; }
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-
-        public Paddle Paddle { get; private set; }
-
-        private readonly Stopwatch stopwatch = new();
-        public bool GameRestart { get; private set; } = false;
-        private int CurrentLevel = 1;
+        public Paddle Paddle { get; } = new();
         public Level Level { get; private set; }
-
-        public ScoreBoard ScoreBoard { get; private set; }
-        public QuadBatchRenderer GLRenderer
-        {
-            get => GLView.Renderer;
-        }
 
         public DiscWindow()
         {
             InitializeComponent();
             Instance = this;
-            KeyDown += OnKeyDown!;
-            Paddle = new();
             Level = new("assets.levels.level_1.json");
             ScoreBoard = ScoreBoard.Load();
             stopwatch.Start();
-            musicPlayer.Init(new Mp3FileReader(AssetUtil.OpenEmbeddedFile("assets.sounds.music.mp3")));
-            //musicPlayer.Play();
-            GC.Collect();
+            MusicPlayer.Init(new Mp3FileReader(AssetUtil.OpenEmbeddedFile("assets.sounds.music.mp3")));
+            //MusicPlayer.Play();
+            GC.Collect(2,GCCollectionMode.Aggressive,true,true);
+            GC.WaitForPendingFinalizers();
         }
 
-        private void OnKeyDown(object sender, KeyEventArgs e)
+        protected override void OnKeyDown(KeyEventArgs e)
         {
             if (GameRestart)
             {
                 if (e.Key == Key.Enter)
                 {
+                    SoundUtils.PlaySound(SoundUtils.CLICK_SOUND);
                     GameRestart = false;
                     DisplayText.Text = "";
                     Level = new("assets.levels.level_" + Convert.ToString(CurrentLevel) + ".json");
                 }
-                else
-                    return;
             }
             else
             {
-                Paddle.OnKeyDown(sender, e);
-                Level.GetBall().OnKeyDown(sender, e);
+                Paddle.OnKeyDown(e.Key);
+                Level.GetBall().OnKeyDown(e.Key);
             }
+            base.OnKeyDown(e);
         }
 
         public override void Render(DrawingContext context)
         {
             if (GameRestart)
-                DisplayText.Text = "        Final Score: " + Convert.ToString(LastScore) + "\nPress Enter To Restart";
+                DisplayText.Text = "Press Enter To Restart";
             else
             {
                 if (!Level.GetBall().IsAlive())
@@ -86,11 +78,11 @@ namespace SquareSmash.renderer.Windows
             if (Paddle.IsDead())
             {
                 Paddle.ResetPaddle();
-                LastScore = Level.GetBall().GetScore();
-                if (LastScore > ScoreBoard.entry[0].Score)
+                int Score = Level.GetBall().GetScore();
+                if (Score > ScoreBoard.entry[0].Score)
                 {
                     Action<int, string> callback = FinishNewUser;
-                    var popupWindow = new PopUpWindow(LastScore, callback);
+                    var popupWindow = new PopUpWindow(Score, callback);
                     var task = popupWindow.ShowDialog(this);
                 }
                 GameRestart = true;
@@ -108,14 +100,17 @@ namespace SquareSmash.renderer.Windows
         {
             ScoreBoard.addScore(new(UserNameData, LastScoreData));
             ScoreBoard.Save(ScoreBoard);
+            GC.Collect(2, GCCollectionMode.Forced, true, true);
+            GC.WaitForPendingFinalizers();
         }
 
 
 
         protected override void OnClosing(CancelEventArgs e)
         {
-            musicPlayer.Stop();
-            musicPlayer.Dispose();
+            SoundUtils.CleanUp();
+            MusicPlayer.Stop();
+            MusicPlayer.Dispose();
             stopwatch.Stop();
             Renderer.Dispose();
             ScoreBoard.Save(ScoreBoard);
@@ -126,6 +121,8 @@ namespace SquareSmash.renderer.Windows
         {
             CurrentLevel++;
             Level = new Level("assets.levels.level_" + Convert.ToString(CurrentLevel) + ".json");
+            GC.Collect(2, GCCollectionMode.Aggressive, true, true);
+            GC.WaitForPendingFinalizers();
         }
     }
 }

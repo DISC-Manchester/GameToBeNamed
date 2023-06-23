@@ -1,10 +1,7 @@
-
 using Avalonia.OpenGL;
-using OpenTK.Mathematics;
 using SquareSmash.utils;
 using StbImageSharp;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using static Avalonia.OpenGL.GlConsts;
 
@@ -18,10 +15,9 @@ namespace SquareSmash.renderer
         private readonly int vao;
         private readonly int sid;
         private readonly int sid_anti_ghost;
-        private readonly int sid_plain;
         private readonly int tex_id;
-        private readonly int vsize = 5 * sizeof(float);
-        private readonly List<Vertex> quadVertices;
+        private readonly Vertex[] quadVertices = new Vertex[714];
+        private int vertex_index = 0;
 
         private static unsafe int CreateTexture(GlInterface GL, GlExtrasInterface EGL, string path)
         {
@@ -69,10 +65,8 @@ namespace SquareSmash.renderer
         {
             GL = gl;
             GLE = ext;
-            quadVertices = new List<Vertex>();
             sid = CreateShader(gl, AssetUtil.ReadEmbeddedFile("assets.shaders.basic_vertex.glsl"), AssetUtil.ReadEmbeddedFile("assets.shaders.basic_fragment.glsl"));
             sid_anti_ghost = CreateShader(gl, AssetUtil.ReadEmbeddedFile("assets.shaders.basic_vertex.glsl"), AssetUtil.ReadEmbeddedFile("assets.shaders.anti_ghost_fragment.glsl"));
-            sid_plain = CreateShader(gl, AssetUtil.ReadEmbeddedFile("assets.shaders.basic_vertex.glsl"), AssetUtil.ReadEmbeddedFile("assets.shaders.striped_fragment.glsl"));
             tex_id = CreateTexture(gl, ext, "assets.Textures.mask.png");
             vbo = GL.GenBuffer();
             int[] vaos = new int[1];
@@ -80,53 +74,60 @@ namespace SquareSmash.renderer
             vao = vaos[0];
             GLE.BindVertexArray(vao);
             GL.BindBuffer(GL_ARRAY_BUFFER, vbo);
-            GL.VertexAttribPointer(0, 2, GL_FLOAT, 0, vsize, 0);
+            GL.VertexAttribPointer(0, 2, GL_FLOAT, 0, 4 * sizeof(float), 0);
             GL.EnableVertexAttribArray(0);
-            GL.VertexAttribPointer(1, 1, GL_FLOAT, 0, vsize, 2 * sizeof(float));
+            GL.VertexAttribPointer(1, 1, GL_FLOAT, 0, 4 * sizeof(float), 2 * sizeof(float));
             GL.EnableVertexAttribArray(1);
-            GL.VertexAttribPointer(2, 2, GL_FLOAT, 0, vsize, 3 * sizeof(float));
+            GL.VertexAttribPointer(2, 1, GL_FLOAT, 0, 4 * sizeof(float), 3 * sizeof(float));
             GL.EnableVertexAttribArray(2);
             GLE.BindVertexArray(0);
         }
 
         public void AddQuad(Vertex[] Vertices)
-            => quadVertices.AddRange(Vertices);
-
-        public Vertex[] AddQuad(Vector2 position, Vector2 size, float color)
         {
-            var quad = VertexUtils.PreMakeQuad(position, size, color);
-            quadVertices.AddRange(quad);
+            int i = 0;
+            for (; vertex_index < 714 && i != Vertices.Length;)
+                quadVertices[vertex_index++] = Vertices[i++];
+        }
+
+        public Vertex[] AddQuad(float x, float y, float width, float height, float color)
+        {
+            var quad = VertexUtils.PreMakeQuad(x, y, width, height, color);
+            AddQuad(quad);
             return quad;
         }
 
-        public unsafe void ShaderFlush(int id)
+        private void ShaderFlush(int id)
         {
-            if (quadVertices.Count == 0)
-                return;
             GLE.BindVertexArray(vao);
-            fixed (void* pdata = quadVertices.ToArray())
-                GL.BufferData(GL_ARRAY_BUFFER, quadVertices.Count * vsize, new IntPtr(pdata), GL_DYNAMIC_DRAW);
-
+            unsafe
+            {
+                fixed (void* pdata = quadVertices)
+                    GL.BufferData(GL_ARRAY_BUFFER, quadVertices.Length * (4 * sizeof(float)), new IntPtr(pdata), GL_DYNAMIC_DRAW);
+            }
             GL.BindTexture(GL_TEXTURE_2D, tex_id);
             GL.UseProgram(id);
-            GL.DrawArrays(GL_TRIANGLES, 0, quadVertices.Count);
+            GL.DrawArrays(GL_TRIANGLES, 0, quadVertices.Length);
             GLE.BindVertexArray(0);
-            quadVertices.Clear();
+            vertex_index = 0;
+            for (int i = 0; i < quadVertices.Length; i++)
+            {
+                quadVertices[i].UvID = 0f;
+                quadVertices[i].ColorID = 0f;
+                quadVertices[i].X = 0f;
+                quadVertices[i].Y = 0f;
+            }
         }
 
-
-        public unsafe void Flush() => ShaderFlush(sid);
-        public unsafe void FlushAntiGhost() => ShaderFlush(sid_anti_ghost);
-        public unsafe void FlushPlain() => ShaderFlush(sid_plain);
+        public void Flush() => ShaderFlush(sid);
+        public void FlushAntiGhost() => ShaderFlush(sid_anti_ghost);
 
         public void Dispose()
         {
-            quadVertices.Clear();
             GL.DeleteBuffers(1, new[] { vbo });
             GLE.DeleteVertexArrays(1, new[] { vao });
             GL.DeleteProgram(sid);
             GL.DeleteProgram(sid_anti_ghost);
-            GL.DeleteProgram(sid_plain);
             GL.DeleteTextures(1, new[] { tex_id });
         }
     }

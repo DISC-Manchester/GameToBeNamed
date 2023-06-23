@@ -1,18 +1,17 @@
 ﻿using Avalonia.Input;
-using NAudio.Wave;
 using OpenTK.Mathematics;
 using SquareSmash.objects.components.bricks;
 using SquareSmash.renderer;
 using SquareSmash.renderer.Windows;
 using SquareSmash.utils;
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace SquareSmash.objects.components
 {
     public class Ball
     {
-        private readonly Vector2 Size = new(0.03f, 0.03f);
         private int LastScore = 0;
         public int Score { get; set; }
         private Vector2 Position;
@@ -22,13 +21,13 @@ namespace SquareSmash.objects.components
         private readonly float LaunchSpeed;
         private bool Released = false;
         private int CoolDown = 0;
-        public Ball(Paddle paddle, float speed)
+        public Ball(float speed)
         {
             LaunchSpeed = Speed = speed;
-            Position = paddle.GetPosition();
+            Position = new(DiscWindow.Instance.Paddle.GetPositionX(), -150f);
             Position.X += 0;
             Position.Y -= 10;
-            Vertices = VertexUtils.PreMakeQuad(Vector2.Zero, Vector2.Zero, 0f);
+            Vertices = VertexUtils.PreMakeQuad(0, 0, 0, 0, 0f);
         }
 
         public void ResetBall()
@@ -46,31 +45,26 @@ namespace SquareSmash.objects.components
 
         public bool IsAlive() => Released;
 
-        public void OnKeyDown(object sender, KeyEventArgs e)
+        public void OnKeyDown(Key key)
         {
-            if (e.Key == Key.Space && !Released)
+            if (key == Key.Space && !Released)
             {
+                SoundUtils.PlaySound(SoundUtils.CLICK_SOUND);
                 DiscWindow.Instance.DisplayText.Text = "";
                 Velocity.Y = LaunchSpeed;
                 Velocity.X = Random.Shared.NextSingle() > 0.5f ? -LaunchSpeed : LaunchSpeed;
                 Released = true;
             }
         }
-        private void Play()
-        {
-            WaveOutEvent beepPlayer = new();
-            beepPlayer.Init(new WaveFileReader(AssetUtil.OpenEmbeddedFile("assets.sounds.bounce.wav")));
-            beepPlayer.Play();
-        }
 
         public void OnUpdate(Level level, float DeltaTime)
         {
             if (Released is false)
             {
-                Position = DiscWindow.Instance.Paddle.GetPosition();
+                Position = new(DiscWindow.Instance.Paddle.GetPositionX(), -150f);
                 Position.X *= 10;
                 Position.Y += 5;
-                VertexUtils.UpdateQuad(Position, Size, ref Vertices);
+                VertexUtils.UpdateQuad(Position.X, Position.Y, 0.03f, 0.03f, ref Vertices,0);
                 return;
             }
 
@@ -78,33 +72,33 @@ namespace SquareSmash.objects.components
             Position.X = Math.Clamp(Position.X, -171, 171);
             Position.Y = Math.Clamp(Position.Y, -171, 171);
 
-            if (DiscWindow.Instance.Paddle.DoseFullIntersects(Vertices))
+            if (DiscWindow.Instance.Paddle.DoseFullIntersects(ref Vertices))
             {
-                _ = Task.Run(Play);
+                SoundUtils.PlaySound(SoundUtils.BOUNCE_SOUND);
                 Velocity.Y = Math.Abs(Velocity.Y);
             }
             else if (Position.Y >= 170)
             {
-                _ = Task.Run(Play);
+                SoundUtils.PlaySound(SoundUtils.BOUNCE_SOUND);
                 Velocity.Y = -Math.Abs(Velocity.Y);
             }
             else if (Position.X <= -170)
             {
-                _ = Task.Run(Play);
+                SoundUtils.PlaySound(SoundUtils.BOUNCE_SOUND);
                 Velocity.X = Math.Abs(Velocity.X);
             }
             else if (Position.X >= 170)
             {
-                _ = Task.Run(Play);
+                SoundUtils.PlaySound(SoundUtils.BOUNCE_SOUND);
                 Velocity.X = -Math.Abs(Velocity.X);
             }
             else
             {
                 foreach (Brick brick in level.GetBricks())
                 {
-                    if (brick.IsActive() && brick.DoseFullIntersects(Vertices))
+                    if (brick.DoseFullIntersects(ref Vertices))
                     {
-                        _ = Task.Run(Play);
+                        SoundUtils.PlaySound(SoundUtils.BOUNCE_SOUND);
                         if (CoolDown == 0)
                         {
                             CoolDown = 5;
@@ -141,7 +135,7 @@ namespace SquareSmash.objects.components
             if (Velocity.Y == 0)
                 Velocity.Y += LaunchSpeed;
 
-            VertexUtils.UpdateQuad(Position, Size, ref Vertices);
+            VertexUtils.UpdateQuad(Position.X, Position.Y, 0.03f, 0.03f, ref Vertices,0);
 
             if (Position.Y <= -170)
             {

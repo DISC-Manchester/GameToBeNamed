@@ -1,7 +1,7 @@
-﻿using OpenTK.Mathematics;
-using SquareSmash.objects.components;
+﻿using SquareSmash.objects.components;
 using SquareSmash.objects.components.bricks;
 using SquareSmash.objects.components.bricks.types;
+using SquareSmash.renderer;
 using SquareSmash.renderer.Windows;
 using SquareSmash.utils;
 using System;
@@ -13,8 +13,7 @@ namespace SquareSmash.objects
 {
     public class Level
     {
-        private int bricks_left;
-        protected List<Brick> bricks = new();
+        protected List<Brick> bricks = new(114);
         protected Ball ball;
 
         protected class BrickData
@@ -22,12 +21,7 @@ namespace SquareSmash.objects
             public string Colour { get; set; } = "";
             public BrickType Type { get; set; } = BrickType.NORMAL;
             [JsonPropertyName("Repeat")]
-            public int? LoopNullable { get; set; } = null;
-            public int Loop
-            {
-                get { return LoopNullable ?? 0; }
-                set { LoopNullable = value; }
-            }
+            public int Loop { get; set; } = 0;
         }
 
         protected struct LevelData
@@ -44,7 +38,7 @@ namespace SquareSmash.objects
             DiscGreen,
         };
 
-        private Brick MakeBrick(BrickType type, Vector2 position, string colour_str)
+        private Brick MakeBrick(BrickType type, float x, float y, string colour_str)
         {
             uint colour = (BrickDataColour)Enum.Parse(typeof(BrickDataColour), colour_str) switch
             {
@@ -56,17 +50,18 @@ namespace SquareSmash.objects
             };
             return type switch
             {
-                BrickType.AIR => new NormalBrick(position, colour, this),
-                BrickType.NORMAL => new NormalBrick(position, colour, this),
-                BrickType.LIFE => new LifeBrick(position, this),
+                BrickType.AIR => new NormalBrick(x, y, colour, this),
+                BrickType.NORMAL => new NormalBrick(x, y, colour, this),
+                BrickType.LIFE => new LifeBrick(x, y, this),
                 _ => throw new ArgumentException("a type provided in the level is not one implemented in the gmae"),
             };
         }
 
         private void AddBrick(BrickData brick, ref float x, ref float y)
         {
-            bricks.Add(MakeBrick(brick.Type, new(x, y), brick.Colour));
-            bricks_left++;
+            if (bricks.Count >= 114) throw new ArgumentException("trying to add to many brings to the live");
+            Brick created = MakeBrick(brick.Type, x, y, brick.Colour);
+            bricks.Add(created);
             x += 6f;
             if (x > 39.5f)
             {
@@ -78,7 +73,7 @@ namespace SquareSmash.objects
         public Level(string json_level)
         {
             LevelData data = JsonSerializer.Deserialize<LevelData>(AssetUtil.ReadEmbeddedFile(json_level));
-            ball = new(DiscWindow.Instance.Paddle, data.BaseBallSpeed);
+            ball = new(data.BaseBallSpeed);
             float x = -39f;
             float y = 100;
             foreach (BrickData brick in data.Bricks)
@@ -89,32 +84,38 @@ namespace SquareSmash.objects
                         AddBrick(brick, ref x, ref y);
             }
         }
+
         public Ball GetBall() => ball;
         public List<Brick> GetBricks() => bricks;
 
-        public void OnBrickDeath(object sender, EventArgs e) => bricks_left--;
+        public sbyte bricks_to_gc = 5;
+        public void OnBrickDeath(object sender, EventArgs e)
+        {
+            bricks.Remove((Brick)sender);
+            bricks_to_gc--;
+            if (bricks_to_gc < 0)
+            {
+                bricks_to_gc = 5;
+                GC.Collect();
+            }
+        }
 
         public void OnRendering(object sender)
         {
             foreach (Brick brick in bricks)
                 brick.OnRendering(sender);
-            DiscWindow.Instance.GLRenderer.Flush();
+            ((QuadBatchRenderer)sender).Flush();
             ball.OnRendering(sender);
-            DiscWindow.Instance.GLRenderer.FlushAntiGhost();
+            ((QuadBatchRenderer)sender).FlushAntiGhost();
         }
 
-        private bool send = false;
         public void OnUpdate(float DeltaTime)
         {
-            if (bricks_left <= 0)
+            if (bricks.Count <= 0)
             {
-                if (!send)
-                    DiscWindow.Instance.LevelWon();
-                send = true;
+                DiscWindow.Instance.LevelWon();
                 return;
             }
-            foreach (Brick brick in bricks)
-                brick.OnUpdate();
             ball.OnUpdate(this, DeltaTime);
         }
     }
