@@ -42,14 +42,14 @@ namespace SquareSmash.objects.components
         public void OnKeyDown(HashSet<Key> keys)
         {
             if (keys.Contains(Key.A) && X < 14)
-                VelocityX = 0.05f;
+                VelocityX = 0.75f;
             else if (keys.Contains(Key.D) && X > -14)
-                VelocityX = -0.05f;
+                VelocityX = -0.75f;
         }
 
-        public void OnUpdate(float DeltaTime)
+        public void OnUpdate()
         {
-            X += VelocityX * DeltaTime;
+            X += VelocityX;
             VelocityX = 0;
             X = Clamp(X, -15, 15);
             VertexUtils.UpdateQuad(X, -150.0f, 0.3f, 0.03f, ref Vertices,0);

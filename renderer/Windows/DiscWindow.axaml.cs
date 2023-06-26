@@ -20,10 +20,11 @@ namespace SquareSmash.renderer.Windows
     {
         private HashSet<Key> keys = new HashSet<Key>();
         private static readonly WaveOutEvent MusicPlayer = new();
-        private readonly Stopwatch stopwatch = new();
         private readonly ScoreBoard ScoreBoard;
         private int CurrentLevel = 1;
         private bool GameRestart = false;
+
+        private readonly DispatcherTimer ticker = new() { Interval = new TimeSpan(0, 0, 0, 0, 1000 / 60) };
 
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         public static DiscWindow Instance { get; set; }
@@ -37,10 +38,11 @@ namespace SquareSmash.renderer.Windows
             Instance = this;
             Level = new("assets.levels.level_1.json");
             ScoreBoard = ScoreBoard.Load();
-            stopwatch.Start();
             MusicPlayer.Init(new Mp3FileReader(AssetUtil.OpenEmbeddedFile("assets.sounds.music.mp3")));
             MusicPlayer.Volume = 0.25f;
-            MusicPlayer.Play();
+            //MusicPlayer.Play();
+            ticker.Tick += delegate { tick(); };
+            ticker.IsEnabled = true;
             GC.Collect(2,GCCollectionMode.Aggressive,true,true);
             GC.WaitForPendingFinalizers();
         }
@@ -57,7 +59,7 @@ namespace SquareSmash.renderer.Windows
             base.OnKeyUp(e);
         }
 
-        public override void Render(DrawingContext context)
+        protected void tick()
         {
             if (GameRestart)
             {
@@ -94,10 +96,13 @@ namespace SquareSmash.renderer.Windows
                 }
                 GameRestart = true;
             }
-            float DeltaTime = (float)Instance.stopwatch.Elapsed.TotalMilliseconds;
-            Instance.stopwatch.Restart();
-            Instance.Level.OnUpdate(DeltaTime);
-            Instance.Paddle.OnUpdate(DeltaTime);
+            Level.OnUpdate();
+            Paddle.OnUpdate();
+        }
+
+        public override void Render(DrawingContext context)
+        {
+           
             GLView.Render(context);
             base.Render(context);
             Dispatcher.UIThread.Post(InvalidateVisual, DispatcherPriority.Render);
@@ -115,10 +120,10 @@ namespace SquareSmash.renderer.Windows
 
         protected override void OnClosing(CancelEventArgs e)
         {
+            ticker.IsEnabled = false;
             SoundUtils.CleanUp();
             MusicPlayer.Stop();
             MusicPlayer.Dispose();
-            stopwatch.Stop();
             Renderer.Dispose();
             ScoreBoard.Save(ScoreBoard);
             base.OnClosing(e);

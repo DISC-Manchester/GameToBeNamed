@@ -109,14 +109,14 @@ namespace SquareSmash.objects
             ((QuadBatchRenderer)sender).FlushAntiGhost();
         }
 
-        public void OnUpdate(float DeltaTime)
+        public void OnUpdate()
         {
             if (bricks.Count <= 0)
             {
                 DiscWindow.Instance.LevelWon();
                 return;
             }
-            ball.OnUpdate(this, DeltaTime);
+            ball.OnUpdate(this);
         }
     }
 }

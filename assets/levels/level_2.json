@@ -1,5 +1,5 @@
 ﻿{
-	"BaseBallSpeed": 0.125,
+	"BaseBallSpeed": 5,
 	"Bricks": [
 		{
 			"Colour": "DiscGreen",

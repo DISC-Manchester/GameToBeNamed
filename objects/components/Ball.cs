@@ -58,7 +58,7 @@ namespace SquareSmash.objects.components
             }
         }
 
-        public void OnUpdate(Level level, float DeltaTime)
+        public void OnUpdate(Level level)
         {
             if (Released is false)
             {
@@ -69,7 +69,7 @@ namespace SquareSmash.objects.components
                 return;
             }
 
-            Position += Velocity * DeltaTime;
+            Position += Velocity;
             Position.X = Math.Clamp(Position.X, -171, 171);
             Position.Y = Math.Clamp(Position.Y, -171, 171);
 
@@ -104,7 +104,7 @@ namespace SquareSmash.objects.components
                         {
                             CoolDown = 5;
                             brick.Die();
-                            Speed *= 1.0000001f;
+                            Speed *= 1.1f;
                             Score++;
                             if (brick.GetBrickType() == BrickType.LIFE)
                                 DiscWindow.Instance.Paddle.AddLife();
