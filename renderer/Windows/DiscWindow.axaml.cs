@@ -8,6 +8,7 @@ using SquareSmash.objects.components;
 using SquareSmash.objects.score;
 using SquareSmash.utils;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Threading;
@@ -17,6 +18,7 @@ namespace SquareSmash.renderer.Windows
 {
     public partial class DiscWindow : Window
     {
+        private HashSet<Key> keys = new HashSet<Key>();
         private static readonly WaveOutEvent MusicPlayer = new();
         private readonly Stopwatch stopwatch = new();
         private readonly ScoreBoard ScoreBoard;
@@ -37,37 +39,42 @@ namespace SquareSmash.renderer.Windows
             ScoreBoard = ScoreBoard.Load();
             stopwatch.Start();
             MusicPlayer.Init(new Mp3FileReader(AssetUtil.OpenEmbeddedFile("assets.sounds.music.mp3")));
-            //MusicPlayer.Play();
+            MusicPlayer.Volume = 0.25f;
+            MusicPlayer.Play();
             GC.Collect(2,GCCollectionMode.Aggressive,true,true);
             GC.WaitForPendingFinalizers();
         }
 
         protected override void OnKeyDown(KeyEventArgs e)
         {
-            if (GameRestart)
-            {
-                if (e.Key == Key.Enter)
-                {
-                    SoundUtils.PlaySound(SoundUtils.CLICK_SOUND);
-                    GameRestart = false;
-                    DisplayText.Text = "";
-                    Level = new("assets.levels.level_" + Convert.ToString(CurrentLevel) + ".json");
-                }
-            }
-            else
-            {
-                Paddle.OnKeyDown(e.Key);
-                Level.GetBall().OnKeyDown(e.Key);
-            }
+            keys.Add(e.Key);
             base.OnKeyDown(e);
+        }
+
+        protected override void OnKeyUp(KeyEventArgs e)
+        {
+            keys.Remove(e.Key);
+            base.OnKeyUp(e);
         }
 
         public override void Render(DrawingContext context)
         {
             if (GameRestart)
+            {
+                if (keys.Contains(Key.Enter))
+                {
+                    SoundUtils.PlaySound(SoundUtils.CLICK_SOUND);
+                    GameRestart = false;
+                    DisplayText.Text = "";
+                    Level = new("assets.levels.level_" + Convert.ToString(CurrentLevel) + ".json");
+                    keys.Clear();
+                }
                 DisplayText.Text = "Press Enter To Restart";
+            }
             else
             {
+                Paddle.OnKeyDown(keys);
+                Level.GetBall().OnKeyDown(keys);
                 if (!Level.GetBall().IsAlive())
                 {
                     DisplayText.Text = "Press Space To Start!\n " + ScoreBoard.ToString();

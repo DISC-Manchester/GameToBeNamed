@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Avalonia.Input;
 using SquareSmash.renderer;
 using SquareSmash.utils;
@@ -38,12 +39,12 @@ namespace SquareSmash.objects.components
             VertexUtils.UpdateQuad(1.0f, -150.0f, 0.3f, 0.03f, ref Vertices,0);
         }
 
-        public void OnKeyDown(Key key)
+        public void OnKeyDown(HashSet<Key> keys)
         {
-            if (key == Key.A && X < 14)
-                VelocityX = 0.1f;
-            else if (key == Key.D && X > -14)
-                VelocityX = -0.1f;
+            if (keys.Contains(Key.A) && X < 14)
+                VelocityX = 0.05f;
+            else if (keys.Contains(Key.D) && X > -14)
+                VelocityX = -0.05f;
         }
 
         public void OnUpdate(float DeltaTime)

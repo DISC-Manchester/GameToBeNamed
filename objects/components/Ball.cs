@@ -5,6 +5,7 @@ using SquareSmash.renderer;
 using SquareSmash.renderer.Windows;
 using SquareSmash.utils;
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -45,9 +46,9 @@ namespace SquareSmash.objects.components
 
         public bool IsAlive() => Released;
 
-        public void OnKeyDown(Key key)
+        public void OnKeyDown(HashSet<Key> keys)
         {
-            if (key == Key.Space && !Released)
+            if (keys.Contains(Key.Space) && !Released)
             {
                 SoundUtils.PlaySound(SoundUtils.CLICK_SOUND);
                 DiscWindow.Instance.DisplayText.Text = "";
