@@ -3,29 +3,32 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using DiscOut.Avalonia;
 using System;
-namespace DiscOut;
-public partial class Program : Application
+
+namespace DiscOut
 {
-    public override void Initialize()
+    public partial class Program : Application
     {
-        AvaloniaXamlLoader.Load(this);
-    }
-    public override void OnFrameworkInitializationCompleted()
-    {
-        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+        public override void Initialize()
         {
-            desktop.MainWindow = new DiscWindow();
+            AvaloniaXamlLoader.Load(this);
         }
-        base.OnFrameworkInitializationCompleted();
+        public override void OnFrameworkInitializationCompleted()
+        {
+            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            {
+                desktop.MainWindow = new DiscWindow();
+            }
+            base.OnFrameworkInitializationCompleted();
+        }
     }
-}
-public static class Entry
-{
-    [STAThread]
-    public static void Main(string[] args)
+    public static class Entry
     {
-        Console.Write($"DISCout  Copyright (C) 2023-{DateTime.Now.Year}  DISC (Digital Independent specialist College) \nThis program comes with ABSOLUTELY NO WARRANTY;\n");
-        BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
+        [STAThread]
+        public static void Main(string[] args)
+        {
+            Console.Write($"DISCout  Copyright (C) 2023-{DateTime.Now.Year}  DISC (Digital Independent specialist College) \nThis program comes with ABSOLUTELY NO WARRANTY;\n");
+            BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
+        }
+        public static AppBuilder BuildAvaloniaApp() => AppBuilderDesktopExtensions.UsePlatformDetect().With(new Win32PlatformOptions { UseWgl = true }).LogToTrace();
     }
-    public static AppBuilder BuildAvaloniaApp() => AppBuilder.Configure<Program>().UsePlatformDetect().With(new Win32PlatformOptions { UseWgl = true }).LogToTrace();
 }

@@ -5,15 +5,14 @@
         xmlns:controls="clr-namespace:DiscOut.Avalonia"
         Width="640" Height="720"
         x:Class="DiscOut.Avalonia.DiscWindow"
-        Title="DISCout" Background="Black">
-  
-  <Border Background="Gray" BorderThickness="20">
-    <Grid>
-      <Panel Background="Black">
+        Title="DISCout" Margin="0" Padding="0" Background="Gray" Icon="/build_assets/icon.ico">
+  <Panel HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="10">
+    <Grid Margin="0">
+      <Panel Background="Black" Margin="0">
         <controls:GameOpenGLControl Name="GLView" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
       </Panel>
       <TextBlock Foreground ="White" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10" Name="ScoreText"/>
       <TextBlock Foreground ="White" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="36" Name="DisplayText"/>
     </Grid>
-  </Border>
+  </Panel>
 </Window>
