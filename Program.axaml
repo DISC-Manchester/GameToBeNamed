@@ -1,8 +1,0 @@
-﻿<Application  xmlns:avalonia="clr-namespace:Avalonia;assembly=Avalonia.Controls"
-              xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             x:Class="SquareSmash.Program">
-            <Application.Styles>
-              <FluentTheme Mode="Light"/>
-            </Application.Styles>
-</Application>

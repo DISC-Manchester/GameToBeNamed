@@ -8,6 +8,23 @@
     <!--#if (UseCompiledBindings) -->
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <StartupObject></StartupObject>
+    <Company>DISC</Company>
+    <Product>DISCout</Product>
+    <Authors>Phoenixfirewingz</Authors>
+    <Title>DISCout</Title>
+    <PackageId>DiscOut</PackageId>
+    <Copyright>DISCout  Copyright (C) 2023 DISC (Digital Independent specialist College) This program comes with ABSOLUTELY NO WARRANTY;</Copyright>
+    <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
+    <PackageProjectUrl>https://github.com/DISC-Manchester/SquareSmash</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/DISC-Manchester/SquareSmash</RepositoryUrl>
+    <NeutralLanguage>en</NeutralLanguage>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
+    <PlatformTarget>x64</PlatformTarget>
+    <ApplicationIcon>build_assets\icon.ico</ApplicationIcon>
+    <PackageIcon>icon.png</PackageIcon>
+    <NoWin32Manifest>true</NoWin32Manifest>
     <!--#endif -->
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -19,19 +36,15 @@
 
   <!--#if (AvaloniaStableChosen) -->
   <ItemGroup>
-    <Folder Include="renderer\Windows\Controls\" />
     <ProjectCapability Include="Avalonia" />
   </ItemGroup>
   <!--#endif -->
 
   <ItemGroup>
     <PackageReference Include="NAudio" Version="2.1.0" />
-    <PackageReference Include="OpenTK.Mathematics" Version="4.7.7" />
-    <PackageReference Include="StbImageSharp" Version="2.27.13" PrivateAssets="all" />
     <PackageReference Include="Avalonia" Version="0.10.21" />
     <PackageReference Include="Avalonia.Desktop" Version="0.10.21" />
     <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
-    <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="0.10.21" />
     <!--#if (AvaloniaStableChosen) -->
     <PackageReference Include="XamlNameReferenceGenerator" Version="1.6.1" />
     <!--#endif -->
@@ -46,8 +59,27 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="renderer\Windows\PopUpWindow.axaml.cs">
+    <Content Include="build_assets\icon.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="DiscOut\Avolonia\PopUpWindow.axaml.cs">
       <DependentUpon>PopUpWindow.axaml</DependentUpon>
     </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="build_assets\icon.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Update="LICENSE">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Update="README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
   </ItemGroup>
 </Project>
