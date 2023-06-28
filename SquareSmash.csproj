@@ -1,32 +1,93 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net7.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!--#if (UseCompiledBindings) -->
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <StartupObject>DiscOut.Entry</StartupObject>
+    <Company>DISC</Company>
+    <Product>DISCout</Product>
+    <Authors>Phoenixfirewingz</Authors>
+    <Title>DISCout</Title>
+    <PackageId>DiscOut</PackageId>
+    <Copyright>DISCout  Copyright (C) 2023 DISC (Digital Independent specialist College) This program comes with ABSOLUTELY NO WARRANTY;</Copyright>
+    <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
+    <PackageProjectUrl>https://github.com/DISC-Manchester/SquareSmash</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/DISC-Manchester/SquareSmash</RepositoryUrl>
+    <NeutralLanguage>en</NeutralLanguage>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
+    <PlatformTarget>x64</PlatformTarget>
+    <ApplicationIcon>build_assets\icon.ico</ApplicationIcon>
+    <PackageIcon>icon.png</PackageIcon>
+    <NoWin32Manifest>true</NoWin32Manifest>
+    <RootNamespace>DISCout</RootNamespace>
+    <AssemblyName>DISCout</AssemblyName>
+    <SignAssembly>False</SignAssembly>
+    <AssemblyOriginatorKeyFile>SquareSmash_TemporaryKey.pfx</AssemblyOriginatorKeyFile>
+    <!--#endif -->
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <NoWarn>0108</NoWarn>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <NoWarn>0108</NoWarn>
   </PropertyGroup>
 
+  <!--#if (AvaloniaStableChosen) -->
   <ItemGroup>
-    <Compile Remove="packages\**" />
-    <EmbeddedResource Remove="packages\**" />
-    <None Remove="packages\**" />
+    <ProjectCapability Include="Avalonia" />
+  </ItemGroup>
+  <!--#endif -->
+
+  <ItemGroup>
+    <PackageReference Include="NAudio" Version="2.1.0" />
+    <PackageReference Include="Avalonia" Version="0.10.21" />
+    <PackageReference Include="Avalonia.Desktop" Version="0.10.21" />
+    <PackageReference Include="System.Text.Json" Version="7.0.3" />
+    <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
+    <!--#if (AvaloniaStableChosen) -->
+    <PackageReference Include="XamlNameReferenceGenerator" Version="1.6.1" />
+    <!--#endif -->
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="ImGui.NET" Version="1.89.5" />
-    <PackageReference Include="MongoDB.Driver" Version="2.19.1" />
-    <PackageReference Include="OpenTK" Version="4.7.7" />
-    <Content Include="assets/**" CopyToOutputDirectory="PreserveNewest" />
+    <EmbeddedResource Include="assets\**" />
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Remove="temp.cs" />
+    <None Remove="assets\sounds\click.wav" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Remove="assets\levels\level_1.json" />
-    <None Remove="assets\levels\level_2.json" />
+    <Content Include="build_assets\icon.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AvaloniaResource Include="build_assets\icon.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="DiscOut\Avolonia\PopUpWindow.axaml.cs">
+      <DependentUpon>PopUpWindow.axaml</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="build_assets\icon.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Update="LICENSE">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Update="README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
   </ItemGroup>
 </Project>
