@@ -29,6 +29,6 @@ namespace DiscOut
             Console.Write($"DISCout  Copyright (C) 2023-{DateTime.Now.Year}  DISC (Digital Independent specialist College) \nThis program comes with ABSOLUTELY NO WARRANTY;\n");
             BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
         }
-        public static AppBuilder BuildAvaloniaApp() => AppBuilderDesktopExtensions.UsePlatformDetect().With(new Win32PlatformOptions { UseWgl = true }).LogToTrace();
+        public static AppBuilder BuildAvaloniaApp() => AppBuilder.Configure<Program>().UsePlatformDetect().With(new Win32PlatformOptions { UseWgl = true }).LogToTrace();
     }
 }
